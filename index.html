@@ -1110,6 +1110,7 @@
     document.getElementById(type + '-form-shares').value = '';
     document.getElementById(type + '-form-price').value = '';
     renderTccTab();
+    pushInvestData();
   }
 
   function deleteRecord(type, id) {
@@ -1119,6 +1120,7 @@
     history = history.filter(r => r.id !== id);
     localStorage.setItem(key, JSON.stringify(history));
     renderTccTab();
+    pushInvestData();
   }
 
   // renderHistoryTable에서 sc 타입 삭제 버튼 연결
@@ -1244,6 +1246,7 @@
     document.getElementById('sc-form-shares').value = '';
     document.getElementById('sc-form-price').value = '';
     renderScTab();
+    pushInvestData();
   }
 
   function deleteScRecord(id) {
@@ -1252,6 +1255,7 @@
     history = history.filter(r => r.id !== id);
     localStorage.setItem('sc_history', JSON.stringify(history));
     renderScTab();
+    pushInvestData();
   }
 
   function saveCash(strategy) {
@@ -1383,6 +1387,7 @@
     localStorage.setItem('pension_seeds', JSON.stringify(seeds));
     document.getElementById('pension-seed-amount').value = '';
     renderPensionTab();
+    pushInvestData();
   }
 
   function deletePensionSeed(id) {
@@ -1390,6 +1395,7 @@
     const seeds = getPensionSeeds().filter(s => s.id !== id);
     localStorage.setItem('pension_seeds', JSON.stringify(seeds));
     renderPensionTab();
+    pushInvestData();
   }
 
   function addPensionHolding() {
@@ -1404,6 +1410,7 @@
       document.getElementById(id).value = '';
     });
     renderPensionTab();
+    pushInvestData();
   }
 
   function editPensionHolding(id) {
@@ -1418,12 +1425,14 @@
     h.ticker = newTicker.trim();
     savePensionHoldings(holdings);
     renderPensionTab();
+    pushInvestData();
   }
 
   function deletePensionHolding(id) {
     if (!confirm('종목을 삭제할까요?')) return;
     savePensionHoldings(getPensionHoldings().filter(h => h.id !== id));
     renderPensionTab();
+    pushInvestData();
   }
 
   function movePensionHolding(id, dir) {
@@ -1436,12 +1445,13 @@
     }
     savePensionHoldings(holdings);
     renderPensionTab();
+    pushInvestData();
   }
 
   function updatePensionShares(id, value) {
     const holdings = getPensionHoldings();
     const h = holdings.find(x => x.id === id);
-    if (h) { h.shares = parseFloat(value) || 0; savePensionHoldings(holdings); renderPensionTab(); }
+    if (h) { h.shares = parseFloat(value) || 0; savePensionHoldings(holdings); renderPensionTab(); pushInvestData(); }
   }
 
   async function fetchPensionPrice(ticker) {
@@ -1541,6 +1551,7 @@
     if (vrGistIdInput) localStorage.setItem('vr_gist_id', vrGistIdInput);
     if (mumaeGistIdInput) localStorage.setItem('mumae_gist_id', mumaeGistIdInput);
     renderOverviewConfig();
+    pushInvestData();
   }
 
   function renderOverviewConfig() {
@@ -1668,18 +1679,21 @@
     document.getElementById('kstock-form-eval').value = '';
     document.getElementById('kstock-form-cash').value = '';
     renderKstockTab();
+    pushInvestData();
   }
 
   function deleteKstockRecord(id) {
     if (!confirm('이 기록을 삭제할까요?')) return;
     saveKstockHistory(getKstockHistory().filter(r => r.id !== id));
     renderKstockTab();
+    pushInvestData();
   }
 
   function saveKstockSeed() {
     const val = parseFloat(document.getElementById('kstock-seed-input').value) || 0;
     localStorage.setItem('kstock_seed', val.toString());
     renderKstockTab();
+    pushInvestData();
   }
 
   // ══════════════════════════════════
@@ -1854,11 +1868,19 @@
       const gist = await res.json();
       const content = gist.files?.['invest_data.json']?.content;
       if (!content) return;
-      const data = JSON.parse(content);
-      if (data.tcc_cash !== undefined) localStorage.setItem('tcc_cash', String(data.tcc_cash));
-      if (data.sc_cash  !== undefined) localStorage.setItem('sc_cash',  String(data.sc_cash));
+      const d = JSON.parse(content);
+      const setArr = (k) => { if (d[k] !== undefined) localStorage.setItem(k, JSON.stringify(d[k])); };
+      const setNum = (k) => { if (d[k] !== undefined) localStorage.setItem(k, String(d[k])); };
+      const setStr = (k) => { if (d[k] !== undefined && d[k]) localStorage.setItem(k, d[k]); };
+      ['tcc_tcore','tcc_tcycle','sc_history','pension_holdings','pension_seeds','kstock_history'].forEach(setArr);
+      if (d.invest_config !== undefined) localStorage.setItem('invest_config', JSON.stringify(d.invest_config));
+      setNum('tcc_cash'); setNum('sc_cash'); setNum('kstock_seed');
+      setStr('sheets_url');
       renderTccTab();
       renderScTab();
+      renderPensionTab();
+      renderKstockTab();
+      renderOverviewConfig();
       updateAllocAndAchieve();
     } catch (e) { /* silent */ }
   }
@@ -1866,9 +1888,19 @@
   async function pushInvestData() {
     const { id, token } = getGistConfig();
     if (!id || !token) return;
+    const ls = k => localStorage.getItem(k);
     const data = {
-      tcc_cash: parseFloat(localStorage.getItem('tcc_cash') || '0'),
-      sc_cash:  parseFloat(localStorage.getItem('sc_cash')  || '0')
+      tcc_cash:         parseFloat(ls('tcc_cash') || '0'),
+      sc_cash:          parseFloat(ls('sc_cash')  || '0'),
+      tcc_tcore:        JSON.parse(ls('tcc_tcore')        || '[]'),
+      tcc_tcycle:       JSON.parse(ls('tcc_tcycle')       || '[]'),
+      sc_history:       JSON.parse(ls('sc_history')       || '[]'),
+      pension_holdings: JSON.parse(ls('pension_holdings') || '[]'),
+      pension_seeds:    JSON.parse(ls('pension_seeds')    || '[]'),
+      kstock_history:   JSON.parse(ls('kstock_history')   || '[]'),
+      kstock_seed:      parseFloat(ls('kstock_seed') || '0'),
+      invest_config:    JSON.parse(ls('invest_config')    || '{}'),
+      sheets_url:       ls('sheets_url') || ''
     };
     try {
       await fetch(`https://api.github.com/gists/${id}`, {
