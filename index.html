@@ -130,21 +130,13 @@
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div class="bg-[#0f172a] rounded-lg p-3">
-              <p class="text-[10px] text-[#64748b] mb-1">T코어 평가금</p>
-              <p class="text-[15px] font-bold" id="ov-tcore-eval">--</p>
-              <p class="text-xs mt-0.5" id="ov-tcore-pnl">--</p>
+              <p class="text-[10px] text-[#64748b] mb-1">합산</p>
+              <p class="text-[15px] font-bold" id="ov-tcc-grand">--</p>
             </div>
             <div class="bg-[#0f172a] rounded-lg p-3">
-              <p class="text-[10px] text-[#64748b] mb-1">T사이클 평가금</p>
-              <p class="text-[15px] font-bold" id="ov-tcycle-eval">--</p>
-              <p class="text-xs mt-0.5" id="ov-tcycle-pnl">--</p>
+              <p class="text-[10px] text-[#64748b] mb-1">수익률</p>
+              <p class="text-[15px] font-bold" id="ov-tcc-pnl">--</p>
             </div>
-          </div>
-          <div class="mt-2 flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
-            <span class="text-[#64748b]">할당 시드</span>
-            <span class="text-[#94a3b8]" id="ov-tcc-alloc">--</span>
-            <span class="text-[#64748b]">달성률</span>
-            <span class="text-[#94a3b8]" id="ov-tcc-achieve">--</span>
           </div>
         </div>
         <button class="expand-btn w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between">
@@ -153,17 +145,15 @@
         </button>
         <div class="expand-detail hidden px-4 pb-4 pt-3 space-y-2 border-t border-[#334155]">
           <p class="text-[10px] text-[#64748b] font-medium mb-1">T코어</p>
-          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">보유수량</span><span id="ov-tcore-shares">--</span></div>
-          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평균단가</span><span id="ov-tcore-avg">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평가금</span><span id="ov-tcore-eval">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">수익률</span><span id="ov-tcore-pnl">--</span></div>
           <div class="border-t border-[#334155] my-2"></div>
           <p class="text-[10px] text-[#64748b] font-medium mb-1">T사이클</p>
-          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">보유수량</span><span id="ov-tcycle-shares">--</span></div>
-          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평균단가</span><span id="ov-tcycle-avg">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평가금</span><span id="ov-tcycle-eval">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">예수금</span><span id="ov-tcc-cash" class="text-[#64748b] text-[10px]">--</span></div>
+          <div class="flex justify-between text-xs font-medium"><span class="text-[#94a3b8]">합계</span><span id="ov-tcycle-grand">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">수익률</span><span id="ov-tcycle-pnl">--</span></div>
           <div class="border-t border-[#334155] my-2"></div>
-          <p class="text-[10px] text-[#64748b] font-medium mb-1">TCC 합산</p>
-          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평가금 합산</span><span id="ov-tcc-total">--</span></div>
-          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">T사이클 예수금</span><span id="ov-tcc-cash">--</span></div>
-          <div class="flex justify-between text-xs font-medium"><span class="text-[#94a3b8]">TCC 합계</span><span id="ov-tcc-grand">--</span></div>
           <div class="flex justify-between text-xs font-medium"><span class="text-[#94a3b8]">코어 : 사이클 비율</span><span id="ov-tcc-ratio">--</span></div>
           <div class="border-t border-[#334155] my-2"></div>
           <div class="flex items-center justify-between mb-1.5">
@@ -183,20 +173,13 @@
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div class="bg-[#0f172a] rounded-lg p-3">
-              <p class="text-[10px] text-[#64748b] mb-1">평가금</p>
-              <p class="text-[15px] font-bold" id="ov-sc-eval">--</p>
-              <p class="text-xs mt-0.5" id="ov-sc-pnl">--</p>
+              <p class="text-[10px] text-[#64748b] mb-1">합산</p>
+              <p class="text-[15px] font-bold" id="ov-sc-grand">--</p>
             </div>
             <div class="bg-[#0f172a] rounded-lg p-3">
-              <p class="text-[10px] text-[#64748b] mb-1">보유수량</p>
-              <p class="text-[15px] font-bold" id="ov-sc-shares">--</p>
+              <p class="text-[10px] text-[#64748b] mb-1">수익률</p>
+              <p class="text-[15px] font-bold" id="ov-sc-pnl">--</p>
             </div>
-          </div>
-          <div class="mt-2 flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
-            <span class="text-[#64748b]">할당 시드</span>
-            <span class="text-[#94a3b8]" id="ov-sc-alloc">--</span>
-            <span class="text-[#64748b]">달성률</span>
-            <span class="text-[#94a3b8]" id="ov-sc-achieve">--</span>
           </div>
         </div>
         <button class="expand-btn w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between">
@@ -205,9 +188,9 @@
         <div class="expand-detail hidden px-4 pb-4 pt-3 space-y-2 border-t border-[#334155]">
           <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">보유수량</span><span id="ov-sc-shares2">--</span></div>
           <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평균단가</span><span id="ov-sc-avg">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">현재가 수익률</span><span id="ov-sc-holding-pnl">--</span></div>
           <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평가금</span><span id="ov-sc-eval2">--</span></div>
           <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">예수금</span><span id="ov-sc-cash">--</span></div>
-          <div class="flex justify-between text-xs font-medium"><span class="text-[#94a3b8]">합계</span><span id="ov-sc-grand">--</span></div>
           <div class="border-t border-[#334155] my-2"></div>
           <div class="flex items-center justify-between mb-1.5">
             <p class="text-[10px] text-[#64748b] font-medium">S사이클 알람 상태</p>
@@ -226,7 +209,7 @@
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div class="bg-[#0f172a] rounded-lg p-3">
-              <p class="text-[10px] text-[#64748b] mb-1">합산 평가금</p>
+              <p class="text-[10px] text-[#64748b] mb-1">합산</p>
               <p class="text-[15px] font-bold" id="ov-pension-eval">--</p>
             </div>
             <div class="bg-[#0f172a] rounded-lg p-3">
@@ -239,6 +222,10 @@
           <span class="expand-label">더보기</span><span class="expand-arrow">▼</span>
         </button>
         <div class="expand-detail hidden px-4 pb-4 pt-3 space-y-2 border-t border-[#334155]">
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평가금</span><span id="ov-pension-eval2">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">예수금</span><span id="ov-pension-cash">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평가금수익률</span><span id="ov-pension-eval-pnl">--</span></div>
+          <div class="border-t border-[#334155] my-2"></div>
           <div id="ov-pension-detail"><p class="text-[10px] text-[#64748b] text-center py-1">--</p></div>
         </div>
       </div>
@@ -739,6 +726,12 @@
               <p class="text-[13px] font-bold" id="pension-pnl">--</p>
             </div>
           </div>
+          <div class="mt-2 flex items-center gap-2">
+            <span class="text-[10px] text-[#64748b] flex-shrink-0">예수금 (₩)</span>
+            <input type="number" id="pension-cash-input" placeholder="0" min="0" step="10000"
+              class="flex-1 bg-[#0f172a] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            <button onclick="savePensionCash()" class="flex-shrink-0 bg-blue-600 text-white text-[10px] px-2 py-1.5 rounded-lg active:opacity-70">저장</button>
+          </div>
         </div>
         <!-- 시드 이력 -->
         <button onclick="toggleSection('pension-seed-section', 'pension-seed-arrow')" class="w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between active:opacity-70">
@@ -797,9 +790,13 @@
                 <label class="text-[10px] text-[#64748b]">티커코드 (선택)</label>
                 <input type="text" id="pension-new-ticker" placeholder="예: 157450" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
               </div>
-              <div class="col-span-2">
+              <div>
                 <label class="text-[10px] text-[#64748b]">보유수량 (주)</label>
                 <input type="number" id="pension-new-shares" placeholder="0" min="0" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">매수가 (원)</label>
+                <input type="number" id="pension-new-avg-price" placeholder="0" min="0" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
               </div>
             </div>
             <button onclick="addPensionHolding()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded-lg font-medium active:opacity-70">추가</button>
@@ -1057,36 +1054,52 @@
   function renderOverviewTcc(tc, ts, price, tcoreEval, tcycleEval) {
     const fmt$ = v => '$' + v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+    const pctCls = v => v >= 0 ? 'text-green-400' : 'text-red-400';
 
-    document.getElementById('ov-tcore-shares').textContent = tc.currentShares + '주';
-    document.getElementById('ov-tcore-avg').textContent = tc.avgBuyPrice > 0 ? '$' + tc.avgBuyPrice.toFixed(2) : '--';
-    document.getElementById('ov-tcycle-shares').textContent = ts.currentShares + '주';
-    document.getElementById('ov-tcycle-avg').textContent = ts.avgBuyPrice > 0 ? '$' + ts.avgBuyPrice.toFixed(2) : '--';
+    const tccCashOv = parseFloat(localStorage.getItem('tcc_cash') || '0');
+    document.getElementById('ov-tcc-cash').textContent = tccCashOv > 0 ? fmt$(tccCashOv) : '--';
 
     if (price > 0) {
+      const tccGrand = tcoreEval + tcycleEval + tccCashOv;
+      document.getElementById('ov-tcc-grand').textContent = fmt$(tccGrand);
+
+      // TCC 수익률: 합산 / 할당시드 - 1
+      const alloc = calcAllocations();
+      if (alloc.tcc > 0) {
+        const pnl = (tccGrand / alloc.tcc - 1) * 100;
+        const el = document.getElementById('ov-tcc-pnl');
+        el.textContent = fmtPct(pnl);
+        el.className = 'text-[15px] font-bold ' + pctCls(pnl);
+      }
+
+      // T코어 더보기
       document.getElementById('ov-tcore-eval').textContent = fmt$(tcoreEval);
-      document.getElementById('ov-tcycle-eval').textContent = fmt$(tcycleEval);
       if (tc.costBasis > 0) {
         const pnl = (tcoreEval / tc.costBasis - 1) * 100;
         const el = document.getElementById('ov-tcore-pnl');
         el.textContent = fmtPct(pnl);
-        el.className = 'text-xs mt-0.5 ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+        el.className = pctCls(pnl);
       }
-      if (ts.costBasis > 0) {
-        const pnl = (tcycleEval / ts.costBasis - 1) * 100;
+
+      // T사이클 더보기
+      document.getElementById('ov-tcycle-eval').textContent = fmt$(tcycleEval);
+      const tcycleGrand = tcycleEval + tccCashOv;
+      document.getElementById('ov-tcycle-grand').textContent = fmt$(tcycleGrand);
+      const tsCostBase = ts.costBasis + tccCashOv;
+      if (tsCostBase > 0) {
+        const pnl = (tcycleGrand / tsCostBase - 1) * 100;
         const el = document.getElementById('ov-tcycle-pnl');
         el.textContent = fmtPct(pnl);
-        el.className = 'text-xs mt-0.5 ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+        el.className = pctCls(pnl);
       }
-      const total = tcoreEval + tcycleEval;
-      const tccCashOv = parseFloat(localStorage.getItem('tcc_cash') || '0');
-      document.getElementById('ov-tcc-total').textContent = fmt$(total);
-      document.getElementById('ov-tcc-cash').textContent = tccCashOv > 0 ? fmt$(tccCashOv) : '--';
-      document.getElementById('ov-tcc-grand').textContent = fmt$(total + tccCashOv);
-      if (total > 0) {
-        const r = tcoreEval / total;
-        document.getElementById('ov-tcc-ratio').textContent =
-          r.toFixed(2) + ' : ' + (1 - r).toFixed(2);
+
+      // 코어:사이클 비율 = T코어 : (T사이클 + 예수금)
+      const scSide = tcycleEval + tccCashOv;
+      if (tcoreEval > 0 || scSide > 0) {
+        const base = Math.min(tcoreEval, scSide) || 1;
+        const r1 = (tcoreEval / base).toFixed(2);
+        const r2 = (scSide / base).toFixed(2);
+        document.getElementById('ov-tcc-ratio').textContent = r1 + ' : ' + r2;
       }
     }
   }
@@ -1215,19 +1228,27 @@
     renderScHistoryTable('sc-history-table', history);
 
     // 전략현황 탭 S사이클 카드 업데이트
-    document.getElementById('ov-sc-shares').textContent = pos.currentShares + '주';
     document.getElementById('ov-sc-shares2').textContent = pos.currentShares + '주';
     document.getElementById('ov-sc-avg').textContent = pos.avgBuyPrice > 0 ? '$' + pos.avgBuyPrice.toFixed(2) : '--';
     document.getElementById('ov-sc-cash').textContent = scCash > 0 ? fmt$(scCash) : '--';
     if (price > 0) {
-      document.getElementById('ov-sc-eval').textContent = fmt$(evalVal);
+      const scGrand = evalVal + scCash;
       document.getElementById('ov-sc-eval2').textContent = fmt$(evalVal);
-      document.getElementById('ov-sc-grand').textContent = fmt$(evalVal + scCash);
-      if (pos.costBasis > 0) {
-        const pnl = (evalVal / pos.costBasis - 1) * 100;
+      document.getElementById('ov-sc-grand').textContent = fmt$(scGrand);
+      // 수익률: 합산 / 할당시드 - 1
+      const scAlloc = calcAllocations().scycle;
+      if (scAlloc > 0) {
+        const pnl = (scGrand / scAlloc - 1) * 100;
         const el = document.getElementById('ov-sc-pnl');
         el.textContent = fmtPct(pnl);
-        el.className = 'text-xs mt-0.5 ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+        el.className = 'text-[15px] font-bold ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+      }
+      // 더보기: 현재가/평균단가 수익률
+      if (pos.avgBuyPrice > 0) {
+        const holdingPnl = (price / pos.avgBuyPrice - 1) * 100;
+        const el = document.getElementById('ov-sc-holding-pnl');
+        el.textContent = fmtPct(holdingPnl);
+        el.className = holdingPnl >= 0 ? 'text-green-400' : 'text-red-400';
       }
     }
   }
@@ -1296,9 +1317,18 @@
     const fmtW   = v => '₩' + Math.round(v).toLocaleString('ko-KR');
     const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
 
-    const totalSeed = seeds.reduce((s, r) => s + r.amount, 0);
-    const totalEval = holdings.reduce((s, h) => s + (h.shares * (prices[h.ticker] || 0)), 0);
-    const pnl = totalSeed > 0 ? (totalEval / totalSeed - 1) * 100 : null;
+    const totalSeed      = seeds.reduce((s, r) => s + r.amount, 0);
+    const totalEval      = holdings.reduce((s, h) => s + (h.shares * (prices[h.ticker] || 0)), 0);
+    const costBasisTotal = holdings.reduce((s, h) => s + h.shares * (h.avg_price || 0), 0);
+    const pensionCash    = parseFloat(localStorage.getItem('pension_cash') || '0');
+    const grandTotal     = totalEval + pensionCash;
+    const grandPnl       = totalSeed > 0 ? (grandTotal / totalSeed - 1) * 100 : null;
+    const evalPnl        = costBasisTotal > 0 ? (totalEval / costBasisTotal - 1) * 100 : null;
+    const pnl = grandPnl;
+
+    // 예수금 입력 복원
+    const cashInput = document.getElementById('pension-cash-input');
+    if (cashInput && !cashInput.matches(':focus')) cashInput.value = pensionCash > 0 ? pensionCash : '';
 
     // 현황 카드
     document.getElementById('pension-total-seed').textContent = totalSeed > 0 ? fmtW(totalSeed) : '--';
@@ -1312,8 +1342,10 @@
     // 종목별 리스트
     const listEl = document.getElementById('pension-holdings-list');
     listEl.innerHTML = holdings.length ? holdings.map((h, i) => {
-      const price = prices[h.ticker] || 0;
-      const ev    = h.shares * price;
+      const price  = prices[h.ticker] || 0;
+      const ev     = h.shares * price;
+      const avgP   = h.avg_price || 0;
+      const pnlH   = (avgP > 0 && price > 0) ? (price / avgP - 1) * 100 : null;
       return `
         <div class="bg-[#0f172a] rounded-lg p-3">
           <div class="flex items-center justify-between mb-2">
@@ -1329,10 +1361,16 @@
               <button onclick="deletePensionHolding(${h.id})" class="text-[10px] text-[#64748b] bg-[#1e293b] border border-[#334155] px-1.5 py-0.5 rounded">✕</button>
             </div>
           </div>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-2 gap-2">
             <div>
               <p class="text-[10px] text-[#64748b] mb-0.5">현재가</p>
               <p class="text-xs font-medium">${price > 0 ? '₩' + price.toLocaleString('ko-KR') : '--'}</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-[#64748b] mb-0.5">매수가</p>
+              <input type="number" value="${avgP || ''}" min="0" placeholder="0"
+                onchange="updatePensionAvgPrice(${h.id}, this.value)"
+                class="w-full bg-[#1e293b] border border-[#334155] rounded px-1.5 py-1 text-xs text-white outline-none focus:border-blue-500">
             </div>
             <div>
               <p class="text-[10px] text-[#64748b] mb-0.5">보유수량</p>
@@ -1345,6 +1383,7 @@
               <p class="text-xs font-medium">${ev > 0 ? fmtW(ev) : '--'}</p>
             </div>
           </div>
+          ${pnlH !== null ? `<div class="mt-1.5 flex justify-between text-xs"><span class="text-[#94a3b8]">수익률</span><span class="${pnlH >= 0 ? 'text-green-400' : 'text-red-400'}">${(pnlH >= 0 ? '+' : '') + pnlH.toFixed(1) + '%'}</span></div>` : ''}
         </div>`;
     }).join('') : '<p class="text-[10px] text-[#64748b] text-center py-3">종목 없음</p>';
 
@@ -1363,17 +1402,32 @@
 
     // 전략현황 탭 카드 업데이트
     document.getElementById('ov-pension-count').textContent = holdings.length + '종목';
-    document.getElementById('ov-pension-eval').textContent = totalEval > 0 ? fmtW(totalEval) : '--';
-    if (pnl !== null) {
+    document.getElementById('ov-pension-eval').textContent = grandTotal > 0 ? fmtW(grandTotal) : (totalEval > 0 ? fmtW(totalEval) : '--');
+    document.getElementById('ov-pension-eval2').textContent = totalEval > 0 ? fmtW(totalEval) : '--';
+    document.getElementById('ov-pension-cash').textContent = pensionCash > 0 ? fmtW(pensionCash) : '--';
+    if (grandPnl !== null) {
       const el = document.getElementById('ov-pension-pnl');
-      el.textContent = fmtPct(pnl);
-      el.className = 'text-[15px] font-bold ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+      el.textContent = fmtPct(grandPnl);
+      el.className = 'text-[15px] font-bold ' + (grandPnl >= 0 ? 'text-green-400' : 'text-red-400');
+    }
+    if (evalPnl !== null) {
+      const el = document.getElementById('ov-pension-eval-pnl');
+      el.textContent = fmtPct(evalPnl);
+      el.className = evalPnl >= 0 ? 'text-green-400' : 'text-red-400';
     }
     document.getElementById('ov-pension-detail').innerHTML = holdings.map(h => {
-      const ev = h.shares * (prices[h.ticker] || 0);
-      return `<div class="flex justify-between text-xs">
-        <span class="text-[#94a3b8]">${h.name}</span>
-        <span>${ev > 0 ? fmtW(ev) : '--'}</span>
+      const ev     = h.shares * (prices[h.ticker] || 0);
+      const avgP   = h.avg_price || 0;
+      const priceH = prices[h.ticker] || 0;
+      const pnlH   = (avgP > 0 && priceH > 0) ? (priceH / avgP - 1) * 100 : null;
+      const pnlStr = pnlH !== null ? (pnlH >= 0 ? '+' : '') + pnlH.toFixed(1) + '%' : '';
+      const pnlCls = pnlH !== null ? (pnlH >= 0 ? 'text-green-400' : 'text-red-400') : '';
+      return `<div class="text-xs mb-1">
+        <div class="flex justify-between">
+          <span class="text-[#94a3b8]">${h.name}</span>
+          <span>${ev > 0 ? fmtW(ev) : '--'}</span>
+        </div>
+        ${pnlStr ? `<div class="flex justify-end"><span class="text-[10px] ${pnlCls}">${pnlStr}</span></div>` : ''}
       </div>`;
     }).join('');
   }
@@ -1400,14 +1454,15 @@
   }
 
   function addPensionHolding() {
-    const name   = document.getElementById('pension-new-name').value.trim();
-    const ticker = document.getElementById('pension-new-ticker').value.trim();
-    const shares = parseFloat(document.getElementById('pension-new-shares').value) || 0;
+    const name     = document.getElementById('pension-new-name').value.trim();
+    const ticker   = document.getElementById('pension-new-ticker').value.trim();
+    const shares   = parseFloat(document.getElementById('pension-new-shares').value) || 0;
+    const avgPrice = parseFloat(document.getElementById('pension-new-avg-price').value) || 0;
     if (!name) { alert('종목명을 입력해주세요.'); return; }
     const holdings = getPensionHoldings();
-    holdings.push({ id: Date.now(), name, ticker, shares });
+    holdings.push({ id: Date.now(), name, ticker, shares, avg_price: avgPrice });
     savePensionHoldings(holdings);
-    ['pension-new-name', 'pension-new-ticker', 'pension-new-shares'].forEach(id => {
+    ['pension-new-name', 'pension-new-ticker', 'pension-new-shares', 'pension-new-avg-price'].forEach(id => {
       document.getElementById(id).value = '';
     });
     renderPensionTab();
@@ -1418,12 +1473,15 @@
     const holdings = getPensionHoldings();
     const h = holdings.find(x => x.id === id);
     if (!h) return;
-    const newName   = prompt('종목명:', h.name);
+    const newName     = prompt('종목명:', h.name);
     if (newName === null) return;
-    const newTicker = prompt('티커코드 (없으면 빈칸):', h.ticker);
+    const newTicker   = prompt('티커코드 (없으면 빈칸):', h.ticker);
     if (newTicker === null) return;
-    h.name   = newName.trim()   || h.name;
-    h.ticker = newTicker.trim();
+    const newAvgPrice = prompt('매수가 (원, 없으면 빈칸):', h.avg_price || '');
+    if (newAvgPrice === null) return;
+    h.name      = newName.trim() || h.name;
+    h.ticker    = newTicker.trim();
+    h.avg_price = parseFloat(newAvgPrice) || 0;
     savePensionHoldings(holdings);
     renderPensionTab();
     pushInvestData();
@@ -1453,6 +1511,19 @@
     const holdings = getPensionHoldings();
     const h = holdings.find(x => x.id === id);
     if (h) { h.shares = parseFloat(value) || 0; savePensionHoldings(holdings); renderPensionTab(); pushInvestData(); }
+  }
+
+  function updatePensionAvgPrice(id, value) {
+    const holdings = getPensionHoldings();
+    const h = holdings.find(x => x.id === id);
+    if (h) { h.avg_price = parseFloat(value) || 0; savePensionHoldings(holdings); renderPensionTab(); pushInvestData(); }
+  }
+
+  function savePensionCash() {
+    const val = parseFloat(document.getElementById('pension-cash-input').value) || 0;
+    localStorage.setItem('pension_cash', val.toString());
+    renderPensionTab();
+    pushInvestData();
   }
 
   async function fetchPensionPrice(ticker) {
@@ -1586,30 +1657,6 @@
     document.getElementById('tcc-alloc-seed').textContent = alloc.tcc    > 0 ? fmt$(alloc.tcc)    : '--';
     document.getElementById('sc-alloc-seed').textContent  = alloc.scycle > 0 ? fmt$(alloc.scycle) : '--';
 
-    // TCC 달성률
-    const tqqq     = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
-    const tcPos    = calcPosition(JSON.parse(localStorage.getItem('tcc_tcore')  || '[]'));
-    const tsPos    = calcPosition(JSON.parse(localStorage.getItem('tcc_tcycle') || '[]'));
-    const tccEval  = (tcPos.currentShares + tsPos.currentShares) * tqqq;
-    const tccCashA = parseFloat(localStorage.getItem('tcc_cash') || '0');
-    const tccTotal = tccEval + tccCashA;
-    const tccAchEl = document.getElementById('ov-tcc-achieve');
-    if (alloc.tcc > 0 && tccTotal > 0) {
-      const rate = tccTotal / alloc.tcc * 100;
-      tccAchEl.textContent = rate.toFixed(0) + '%';
-      tccAchEl.className   = 'text-[#94a3b8] ' + (rate >= 100 ? 'text-green-400' : '');
-    } else { tccAchEl.textContent = '--'; }
-
-    // S사이클 달성률
-    const soxl    = parseFloat(localStorage.getItem('sc_soxl_price') || '0');
-    const scPos   = calcPosition(JSON.parse(localStorage.getItem('sc_history') || '[]'));
-    const scEval  = scPos.currentShares * soxl;
-    const scCashA = parseFloat(localStorage.getItem('sc_cash') || '0');
-    const scTotal = scEval + scCashA;
-    const scAchEl = document.getElementById('ov-sc-achieve');
-    if (alloc.scycle > 0 && scTotal > 0) {
-      scAchEl.textContent = (scTotal / alloc.scycle * 100).toFixed(0) + '%';
-    } else { scAchEl.textContent = '--'; }
   }
 
   // ══════════════════════════════════
@@ -1880,7 +1927,7 @@
       const setStr = (k) => { if (d[k] !== undefined && d[k]) localStorage.setItem(k, d[k]); };
       ['tcc_tcore','tcc_tcycle','sc_history','pension_holdings','pension_seeds','kstock_history'].forEach(setArr);
       if (d.invest_config !== undefined) localStorage.setItem('invest_config', JSON.stringify(d.invest_config));
-      setNum('tcc_cash'); setNum('sc_cash'); setNum('kstock_seed');
+      setNum('tcc_cash'); setNum('sc_cash'); setNum('pension_cash'); setNum('kstock_seed');
       setStr('sheets_url');
       renderTccTab();
       renderScTab();
@@ -1896,8 +1943,9 @@
     if (!id || !token) return;
     const ls = k => localStorage.getItem(k);
     const data = {
-      tcc_cash:         parseFloat(ls('tcc_cash') || '0'),
-      sc_cash:          parseFloat(ls('sc_cash')  || '0'),
+      tcc_cash:         parseFloat(ls('tcc_cash')     || '0'),
+      sc_cash:          parseFloat(ls('sc_cash')      || '0'),
+      pension_cash:     parseFloat(ls('pension_cash') || '0'),
       tcc_tcore:        JSON.parse(ls('tcc_tcore')        || '[]'),
       tcc_tcycle:       JSON.parse(ls('tcc_tcycle')       || '[]'),
       sc_history:       JSON.parse(ls('sc_history')       || '[]'),
@@ -1967,8 +2015,14 @@
 // 배포 > 새 배포 > 유형: 웹앱 > 실행: 나(Me) > 액세스: 모든 사용자(Anyone) > 배포
 // 배포 후 URL을 대시보드 설정의 Apps Script URL에 붙여넣기
 
-const SHEET_NAMES = ['TCC', 'S사이클', '퇴직연금', '국장단타', 'VR', '무매'];
-const HEADERS = ['날짜', '시드', '평가금', '예수금', '합계', '수익률'];
+const SHEET_HEADERS = {
+  'TCC':      ['날짜','할당시드','T코어평가금','T코어수익률','T사이클평가금','T사이클예수금','T사이클합계','T사이클수익률','TCC합산','TCC수익률','코어:사이클'],
+  'S사이클':  ['날짜','할당시드','평가금','예수금','합산','합산수익률','평균단가','현재가수익률'],
+  '퇴직연금': ['날짜','총시드','평가금','예수금','합산','합산수익률','평가금수익률'],
+  '국장단타': ['날짜','시드','평가금','예수금','합계','수익률'],
+  'VR':       ['날짜','할당시드','평가금','Pool','합계','수익률','V2','Vlow','Vhigh'],
+  '무매':     ['날짜','할당시드','합산평가금','수익률','달성률']
+};
 
 function doPost(e) {
   try {
@@ -1978,8 +2032,9 @@ function doPost(e) {
       let sheet = ss.getSheetByName(name);
       if (!sheet) {
         sheet = ss.insertSheet(name);
-        sheet.appendRow(HEADERS);
-        sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
+        const headers = SHEET_HEADERS[name] || ['날짜','데이터'];
+        sheet.appendRow(headers);
+        sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
       }
       sheet.appendRow(row);
     }
@@ -1995,13 +2050,14 @@ function doGet(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const result = {};
-    for (const name of SHEET_NAMES) {
+    for (const name of Object.keys(SHEET_HEADERS)) {
       const sheet = ss.getSheetByName(name);
       if (sheet && sheet.getLastRow() > 1) {
         const last = sheet.getLastRow();
+        const cols = sheet.getLastColumn();
         const startRow = Math.max(2, last - 4);
         const numRows = last - startRow + 1;
-        result[name] = sheet.getRange(startRow, 1, numRows, 6).getValues();
+        result[name] = sheet.getRange(startRow, 1, numRows, cols).getValues();
       }
     }
     return ContentService.createTextOutput(JSON.stringify({ ok: true, data: result }))
@@ -2037,10 +2093,33 @@ function doGet(e) {
     const isHidden = uploadSec.classList.contains('hidden');
     if (isHidden) {
       document.getElementById('sheets-upload-date').value = new Date().toISOString().slice(0, 10);
+      // TCC·S사이클 예수금 자동 채우기
+      const tccCashVal = parseFloat(localStorage.getItem('tcc_cash') || '0');
+      const scCashVal  = parseFloat(localStorage.getItem('sc_cash')  || '0');
+      if (tccCashVal) document.getElementById('sheets-cash-tcc').value = tccCashVal;
+      if (scCashVal)  document.getElementById('sheets-cash-sc').value  = scCashVal;
+      // 퇴직연금 예수금 자동 채우기
+      const pensionCashVal = parseFloat(localStorage.getItem('pension_cash') || '0');
+      if (pensionCashVal) document.getElementById('sheets-cash-pension').value = pensionCashVal;
+      // VR 합계 자동 채우기
+      if (vrGistData) {
+        const tqqq = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+        const vrShares = parseFloat(vrGistData.vr_shares) || 0;
+        const vrPool   = parseFloat(vrGistData.vr_pool)   || 0;
+        const vrTotal  = vrShares * tqqq + vrPool;
+        if (vrTotal > 0) document.getElementById('sheets-total-vr').value = Math.round(vrTotal);
+      }
+      // 무매 합계 자동 채우기
+      if (mumaeGistData) {
+        const tqqq = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+        const active = (mumaeGistData.portfolios || []).filter(p => !p.ended);
+        const mumaeTotal = active.reduce((s, p) => s + (p.hold_qty * tqqq), 0);
+        if (mumaeTotal > 0) document.getElementById('sheets-total-moomae').value = Math.round(mumaeTotal);
+      }
       // 국장 최근 기록 자동 채우기
       const kLatest = [...getKstockHistory()].sort((a, b) => b.date.localeCompare(a.date))[0];
+      document.getElementById('sheets-seed-kstock').value = localStorage.getItem('kstock_seed') || '';
       if (kLatest) {
-        document.getElementById('sheets-seed-kstock').value = localStorage.getItem('kstock_seed') || '';
         document.getElementById('sheets-eval-kstock').value = kLatest.eval || '';
         document.getElementById('sheets-cash-kstock').value = kLatest.cash || '';
       }
@@ -2093,38 +2172,87 @@ function doGet(e) {
     statusEl.className = 'text-xs text-center mb-2 py-1 rounded-lg text-[#94a3b8] bg-[#1e293b]';
     statusEl.classList.remove('hidden');
 
-    const alloc = calcAllocations();
-    const tqqq = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
-    const soxl = parseFloat(localStorage.getItem('sc_soxl_price') || '0');
-    const tcPos = calcPosition(JSON.parse(localStorage.getItem('tcc_tcore') || '[]'));
-    const tsPos = calcPosition(JSON.parse(localStorage.getItem('tcc_tcycle') || '[]'));
-    const tccEval = (tcPos.currentShares + tsPos.currentShares) * tqqq;
-    const scPos = calcPosition(JSON.parse(localStorage.getItem('sc_history') || '[]'));
-    const scEval = scPos.currentShares * soxl;
-    const pensionEval = getPensionHoldings().reduce((s, h) => s + h.shares * (getPensionPrices()[h.ticker] || 0), 0);
-    const pensionSeed = getPensionSeeds().reduce((s, r) => s + r.amount, 0);
+    const alloc  = calcAllocations();
+    const tqqq   = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+    const soxl   = parseFloat(localStorage.getItem('sc_soxl_price')  || '0');
+    const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
 
-    const cashTcc     = parseFloat(document.getElementById('sheets-cash-tcc').value)     || 0;
-    const cashSc      = parseFloat(document.getElementById('sheets-cash-sc').value)      || 0;
-    const totalVr     = parseFloat(document.getElementById('sheets-total-vr').value)     || 0;
-    const totalMoomae = parseFloat(document.getElementById('sheets-total-moomae').value) || 0;
-    const cashPension = parseFloat(document.getElementById('sheets-cash-pension').value) || 0;
-    const seedKstock  = parseFloat(document.getElementById('sheets-seed-kstock').value)  || 0;
-    const evalKstock  = parseFloat(document.getElementById('sheets-eval-kstock').value)  || 0;
-    const cashKstock  = parseFloat(document.getElementById('sheets-cash-kstock').value)  || 0;
+    // TCC
+    const tcPos   = calcPosition(JSON.parse(localStorage.getItem('tcc_tcore')  || '[]'));
+    const tsPos   = calcPosition(JSON.parse(localStorage.getItem('tcc_tcycle') || '[]'));
+    const tcEval  = tcPos.currentShares * tqqq;
+    const tsEval  = tsPos.currentShares * tqqq;
+    const cashTcc = parseFloat(document.getElementById('sheets-cash-tcc').value) || 0;
+    const tsGrand = tsEval + cashTcc;
+    const tccGrand = tcEval + tsGrand;
+    const tcPnl   = tcPos.costBasis > 0 ? fmtPct((tcEval / tcPos.costBasis - 1) * 100) : '';
+    const tsPnl   = (tsPos.costBasis + cashTcc) > 0 ? fmtPct((tsGrand / (tsPos.costBasis + cashTcc) - 1) * 100) : '';
+    const tccPnl  = alloc.tcc > 0 ? fmtPct((tccGrand / alloc.tcc - 1) * 100) : '';
+    const scSide  = tsEval + cashTcc;
+    let tccRatio  = '';
+    if (tcEval > 0 || scSide > 0) {
+      const base = Math.min(tcEval, scSide) || 1;
+      tccRatio = (tcEval / base).toFixed(2) + ':' + (scSide / base).toFixed(2);
+    }
 
-    const tccCost = tcPos.costBasis + tsPos.costBasis;
-    const tccRate = tccCost > 0 ? ((tccEval / tccCost - 1) * 100).toFixed(2) + '%' : '';
-    const scRate  = scPos.costBasis > 0 ? ((scEval / scPos.costBasis - 1) * 100).toFixed(2) + '%' : '';
-    const pensionRate = pensionSeed > 0 ? ((pensionEval / pensionSeed - 1) * 100).toFixed(2) + '%' : '';
+    // S사이클
+    const scPos   = calcPosition(JSON.parse(localStorage.getItem('sc_history') || '[]'));
+    const scEval  = scPos.currentShares * soxl;
+    const cashSc  = parseFloat(document.getElementById('sheets-cash-sc').value) || 0;
+    const scGrand = scEval + cashSc;
+    const scPnl   = alloc.scycle > 0 ? fmtPct((scGrand / alloc.scycle - 1) * 100) : '';
+    const scHoldPnl = (scPos.avgBuyPrice > 0 && soxl > 0) ? fmtPct((soxl / scPos.avgBuyPrice - 1) * 100) : '';
+
+    // 퇴직연금
+    const holdings       = getPensionHoldings();
+    const prices         = getPensionPrices();
+    const pensionSeed    = getPensionSeeds().reduce((s, r) => s + r.amount, 0);
+    const pensionEval    = holdings.reduce((s, h) => s + h.shares * (prices[h.ticker] || 0), 0);
+    const cashPension    = parseFloat(document.getElementById('sheets-cash-pension').value) || 0;
+    const pensionGrand   = pensionEval + cashPension;
+    const pensionCostB   = holdings.reduce((s, h) => s + h.shares * (h.avg_price || 0), 0);
+    const pensionGrandPnl = pensionSeed > 0 ? fmtPct((pensionGrand / pensionSeed - 1) * 100) : '';
+    const pensionEvalPnl  = pensionCostB > 0 ? fmtPct((pensionEval / pensionCostB - 1) * 100) : '';
+
+    // 국장
+    const seedKstock = parseFloat(document.getElementById('sheets-seed-kstock').value) || 0;
+    const evalKstock = parseFloat(document.getElementById('sheets-eval-kstock').value) || 0;
+    const cashKstock = parseFloat(document.getElementById('sheets-cash-kstock').value) || 0;
+    const kstockPnl  = seedKstock > 0 ? fmtPct(((evalKstock + cashKstock) / seedKstock - 1) * 100) : '';
+
+    // VR
+    let vrEval = 0, vrPool = 0, vrV2 = 0, vrVlow = 0, vrVhigh = 0;
+    if (vrGistData) {
+      vrEval = (parseFloat(vrGistData.vr_shares) || 0) * tqqq;
+      vrPool = parseFloat(vrGistData.vr_pool) || 0;
+      try {
+        const trades = JSON.parse(vrGistData.vr_trades || '[]');
+        if (trades.length > 0) {
+          const last = trades[trades.length - 1];
+          vrV2 = last.v2snap || 0; vrVlow = last.vlowSnap || vrV2 * 0.85; vrVhigh = last.vhighSnap || vrV2 * 1.15;
+        }
+      } catch (_) {}
+    }
+    const vrTotal = (vrEval + vrPool) || (parseFloat(document.getElementById('sheets-total-vr').value) || 0);
+    const vrPnl   = alloc.vr > 0 ? fmtPct((vrTotal / alloc.vr - 1) * 100) : '';
+
+    // 무매
+    let mumaeTotal = 0;
+    if (mumaeGistData) {
+      const active = (mumaeGistData.portfolios || []).filter(p => !p.ended);
+      mumaeTotal = active.reduce((s, p) => s + (p.hold_qty * tqqq), 0);
+    }
+    if (!mumaeTotal) mumaeTotal = parseFloat(document.getElementById('sheets-total-moomae').value) || 0;
+    const mumaePnl     = alloc.moomae > 0 ? fmtPct((mumaeTotal / alloc.moomae - 1) * 100) : '';
+    const mumaeAchieve = alloc.moomae > 0 ? (mumaeTotal / alloc.moomae * 100).toFixed(1) + '%' : '';
 
     const payload = {
-      'TCC':      [date, alloc.tcc    || 0, Math.round(tccEval),     cashTcc,     Math.round(tccEval + cashTcc),         tccRate],
-      'S사이클':  [date, alloc.scycle || 0, Math.round(scEval),      cashSc,      Math.round(scEval + cashSc),           scRate],
-      'VR':       [date, alloc.vr     || 0, '',                       '',          totalVr,                               ''],
-      '무매':     [date, alloc.moomae || 0, '',                       '',          totalMoomae,                           ''],
-      '퇴직연금': [date, pensionSeed  || 0, Math.round(pensionEval), cashPension, Math.round(pensionEval + cashPension), pensionRate],
-      '국장단타': [date, seedKstock   || 0, evalKstock,              cashKstock,  evalKstock + cashKstock,               ''],
+      'TCC':      [date, alloc.tcc||0, Math.round(tcEval), tcPnl, Math.round(tsEval), Math.round(cashTcc), Math.round(tsGrand), tsPnl, Math.round(tccGrand), tccPnl, tccRatio],
+      'S사이클':  [date, alloc.scycle||0, Math.round(scEval), Math.round(cashSc), Math.round(scGrand), scPnl, scPos.avgBuyPrice > 0 ? '$'+scPos.avgBuyPrice.toFixed(2) : '', scHoldPnl],
+      '퇴직연금': [date, Math.round(pensionSeed), Math.round(pensionEval), Math.round(cashPension), Math.round(pensionGrand), pensionGrandPnl, pensionEvalPnl],
+      '국장단타': [date, Math.round(seedKstock), Math.round(evalKstock), Math.round(cashKstock), Math.round(evalKstock + cashKstock), kstockPnl],
+      'VR':       [date, alloc.vr||0, Math.round(vrEval), Math.round(vrPool), Math.round(vrTotal), vrPnl, Math.round(vrV2), Math.round(vrVlow), Math.round(vrVhigh)],
+      '무매':     [date, alloc.moomae||0, Math.round(mumaeTotal), mumaePnl, mumaeAchieve],
     };
 
     try {
