@@ -1,0 +1,2214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>투자 통합 대시보드</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+    }
+    .tab-scroll::-webkit-scrollbar { display: none; }
+    .tab-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); }
+  </style>
+</head>
+<body class="min-h-screen max-w-[480px] mx-auto">
+
+  <!-- Header -->
+  <div class="sticky top-0 z-50 bg-[#1e293b] border-b border-[#334155] px-4 py-3">
+    <h1 class="text-[17px] font-bold">투자 통합 대시보드</h1>
+    <p class="text-xs text-[#94a3b8] mt-0.5" id="last-updated">--</p>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="sticky top-[57px] z-40 bg-[#1e293b] border-b border-[#334155]">
+    <div class="tab-scroll flex overflow-x-auto">
+      <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-blue-400 text-blue-400" data-tab="overview">전략현황</button>
+      <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="tcc">TCC</button>
+      <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="scycle">S사이클</button>
+      <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="pension">퇴직연금</button>
+      <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="kstock">국장</button>
+      <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="moomae">무매</button>
+      <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="vr">VR</button>
+    </div>
+  </div>
+
+  <!-- Tab Contents -->
+  <div class="p-4 pb-8">
+
+    <!-- ══════════════════════════════════
+         전략현황 탭
+    ══════════════════════════════════ -->
+    <div id="tab-overview" class="tab-content space-y-3">
+
+      <!-- 시드+비중 설정 카드 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 py-3 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-[#64748b]">총 시드</span>
+            <span class="text-sm font-bold" id="ov-total-seed">--</span>
+          </div>
+          <button onclick="toggleSection('cfg-section','cfg-arrow')" class="text-[10px] text-[#64748b] flex items-center gap-1 active:opacity-70">
+            설정 <span id="cfg-arrow">▼</span>
+          </button>
+        </div>
+        <div id="cfg-section" class="hidden border-t border-[#334155] px-4 py-3 bg-[#0a1120]">
+          <div class="mb-3">
+            <label class="text-[10px] text-[#64748b]">총 시드 ($)</label>
+            <input type="number" id="cfg-total-seed" placeholder="0" step="1000"
+              class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+          </div>
+          <p class="text-[10px] text-[#64748b] mb-2">전략별 비중 (숫자 입력, 비율 자동 계산)</p>
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <div>
+              <label class="text-[10px] text-[#64748b]">TCC</label>
+              <input type="number" id="cfg-ratio-tcc" value="10" min="0"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="text-[10px] text-[#64748b]">S사이클</label>
+              <input type="number" id="cfg-ratio-scycle" value="5" min="0"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="text-[10px] text-[#64748b]">VR</label>
+              <input type="number" id="cfg-ratio-vr" value="6" min="0"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="text-[10px] text-[#64748b]">무매</label>
+              <input type="number" id="cfg-ratio-moomae" value="9" min="0"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            </div>
+          </div>
+          <button onclick="saveConfigForm()" class="w-full bg-blue-600 text-white text-xs py-2 rounded-lg font-medium active:opacity-70">저장</button>
+          <div class="mt-3 border-t border-[#334155] pt-3">
+            <label class="text-[10px] text-[#64748b]">Apps Script URL</label>
+            <input type="url" id="cfg-apps-script-url" placeholder="https://script.google.com/macros/s/..."
+              class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-[10px] text-white outline-none focus:border-blue-500">
+          </div>
+          <button onclick="copyAppsScriptCode()" class="w-full mt-2 border border-[#334155] text-[#64748b] text-xs py-1.5 rounded-lg active:opacity-70">📋 Apps Script 코드 복사</button>
+          <div class="mt-3 border-t border-[#334155] pt-3">
+            <p class="text-[10px] text-[#94a3b8] mb-2 font-medium">Gist 연동 (알람 상태)</p>
+            <div class="mb-2">
+              <label class="text-[10px] text-[#64748b]">Gist ID</label>
+              <input type="text" id="cfg-gist-id" placeholder="MY_GIST_ID"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-[10px] text-white outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="text-[10px] text-[#64748b]">GitHub Token</label>
+              <input type="password" id="cfg-gist-token" placeholder="ghp_..."
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-[10px] text-white outline-none focus:border-blue-500">
+            </div>
+            <div class="mt-2">
+              <label class="text-[10px] text-[#64748b]">VR Gist ID</label>
+              <input type="text" id="cfg-vr-gist-id" placeholder="a7f3ce217b1003560ac4a3ac66772fff"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-[10px] text-white outline-none focus:border-blue-500">
+            </div>
+            <div class="mt-2">
+              <label class="text-[10px] text-[#64748b]">무매 Gist ID</label>
+              <input type="text" id="cfg-mumae-gist-id" placeholder="41596c39240f37d3d196d42b00316d87"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-[10px] text-white outline-none focus:border-blue-500">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TCC 카드 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <span class="text-sm font-bold">TCC</span>
+              <span class="text-xs text-[#94a3b8] ml-2">T코어 + T사이클</span>
+            </div>
+            <span class="text-xs text-[#94a3b8]">TQQQ</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">T코어 평가금</p>
+              <p class="text-[15px] font-bold" id="ov-tcore-eval">--</p>
+              <p class="text-xs mt-0.5" id="ov-tcore-pnl">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">T사이클 평가금</p>
+              <p class="text-[15px] font-bold" id="ov-tcycle-eval">--</p>
+              <p class="text-xs mt-0.5" id="ov-tcycle-pnl">--</p>
+            </div>
+          </div>
+          <div class="mt-2 flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
+            <span class="text-[#64748b]">할당 시드</span>
+            <span class="text-[#94a3b8]" id="ov-tcc-alloc">--</span>
+            <span class="text-[#64748b]">달성률</span>
+            <span class="text-[#94a3b8]" id="ov-tcc-achieve">--</span>
+          </div>
+        </div>
+        <button class="expand-btn w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between">
+          <span class="expand-label">더보기</span>
+          <span class="expand-arrow">▼</span>
+        </button>
+        <div class="expand-detail hidden px-4 pb-4 pt-3 space-y-2 border-t border-[#334155]">
+          <p class="text-[10px] text-[#64748b] font-medium mb-1">T코어</p>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">보유수량</span><span id="ov-tcore-shares">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평균단가</span><span id="ov-tcore-avg">--</span></div>
+          <div class="border-t border-[#334155] my-2"></div>
+          <p class="text-[10px] text-[#64748b] font-medium mb-1">T사이클</p>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">보유수량</span><span id="ov-tcycle-shares">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평균단가</span><span id="ov-tcycle-avg">--</span></div>
+          <div class="border-t border-[#334155] my-2"></div>
+          <p class="text-[10px] text-[#64748b] font-medium mb-1">TCC 합산</p>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평가금 합산</span><span id="ov-tcc-total">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">T사이클 예수금</span><span id="ov-tcc-cash">--</span></div>
+          <div class="flex justify-between text-xs font-medium"><span class="text-[#94a3b8]">TCC 합계</span><span id="ov-tcc-grand">--</span></div>
+          <div class="flex justify-between text-xs font-medium"><span class="text-[#94a3b8]">코어 : 사이클 비율</span><span id="ov-tcc-ratio">--</span></div>
+          <div class="border-t border-[#334155] my-2"></div>
+          <div class="flex items-center justify-between mb-1.5">
+            <p class="text-[10px] text-[#64748b] font-medium">T사이클 알람 상태</p>
+            <button onclick="fetchGistData()" class="text-[10px] text-[#475569] active:text-[#94a3b8]">🔄</button>
+          </div>
+          <div id="ov-tcc-gist"><p class="text-[10px] text-[#475569] text-center py-1">Gist 미연동</p></div>
+        </div>
+      </div>
+
+      <!-- S사이클 카드 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-bold">S사이클</span>
+            <span class="text-xs text-[#94a3b8]">SOXL</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">평가금</p>
+              <p class="text-[15px] font-bold" id="ov-sc-eval">--</p>
+              <p class="text-xs mt-0.5" id="ov-sc-pnl">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">보유수량</p>
+              <p class="text-[15px] font-bold" id="ov-sc-shares">--</p>
+            </div>
+          </div>
+          <div class="mt-2 flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
+            <span class="text-[#64748b]">할당 시드</span>
+            <span class="text-[#94a3b8]" id="ov-sc-alloc">--</span>
+            <span class="text-[#64748b]">달성률</span>
+            <span class="text-[#94a3b8]" id="ov-sc-achieve">--</span>
+          </div>
+        </div>
+        <button class="expand-btn w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between">
+          <span class="expand-label">더보기</span><span class="expand-arrow">▼</span>
+        </button>
+        <div class="expand-detail hidden px-4 pb-4 pt-3 space-y-2 border-t border-[#334155]">
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">보유수량</span><span id="ov-sc-shares2">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평균단가</span><span id="ov-sc-avg">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평가금</span><span id="ov-sc-eval2">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">예수금</span><span id="ov-sc-cash">--</span></div>
+          <div class="flex justify-between text-xs font-medium"><span class="text-[#94a3b8]">합계</span><span id="ov-sc-grand">--</span></div>
+          <div class="border-t border-[#334155] my-2"></div>
+          <div class="flex items-center justify-between mb-1.5">
+            <p class="text-[10px] text-[#64748b] font-medium">S사이클 알람 상태</p>
+            <button onclick="fetchGistData()" class="text-[10px] text-[#475569] active:text-[#94a3b8]">🔄</button>
+          </div>
+          <div id="ov-sc-gist"><p class="text-[10px] text-[#475569] text-center py-1">Gist 미연동</p></div>
+        </div>
+      </div>
+
+      <!-- 퇴직연금 카드 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-bold">퇴직연금</span>
+            <span class="text-xs text-[#94a3b8]" id="ov-pension-count">--</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">합산 평가금</p>
+              <p class="text-[15px] font-bold" id="ov-pension-eval">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">수익률</p>
+              <p class="text-[15px] font-bold" id="ov-pension-pnl">--</p>
+            </div>
+          </div>
+        </div>
+        <button class="expand-btn w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between">
+          <span class="expand-label">더보기</span><span class="expand-arrow">▼</span>
+        </button>
+        <div class="expand-detail hidden px-4 pb-4 pt-3 space-y-2 border-t border-[#334155]">
+          <div id="ov-pension-detail"><p class="text-[10px] text-[#64748b] text-center py-1">--</p></div>
+        </div>
+      </div>
+
+      <!-- 국장 카드 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-bold">국장</span>
+            <span class="text-[10px] text-[#94a3b8]" id="ov-kstock-date">--</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">합계</p>
+              <p class="text-[15px] font-bold" id="ov-kstock-total">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">수익률</p>
+              <p class="text-[15px] font-bold" id="ov-kstock-pnl">--</p>
+            </div>
+          </div>
+        </div>
+        <button class="expand-btn w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between">
+          <span class="expand-label">더보기</span><span class="expand-arrow">▼</span>
+        </button>
+        <div class="expand-detail hidden px-4 pb-4 pt-3 space-y-2 border-t border-[#334155]">
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">시드</span><span id="ov-kstock-seed">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">평가금</span><span id="ov-kstock-eval">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">예수금</span><span id="ov-kstock-cash">--</span></div>
+        </div>
+      </div>
+
+      <!-- 무매 카드 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-bold">무매</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-bold" id="ov-moomae-achieve">--</span>
+              <button onclick="fetchMumaeGist()" class="text-[10px] text-[#475569] active:text-[#94a3b8]">🔄</button>
+            </div>
+          </div>
+          <div id="ov-moomae-list"><p class="text-[10px] text-[#475569] text-center py-2">Gist 미연동</p></div>
+          <div class="mt-2 flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
+            <span class="text-[#64748b]">할당 시드</span>
+            <span class="text-[#94a3b8]" id="ov-moomae-alloc">--</span>
+            <span class="text-[#64748b]">합산 평가금</span>
+            <span class="text-[#94a3b8]" id="ov-moomae-eval">--</span>
+          </div>
+          <div class="mt-1 flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
+            <span class="text-[#64748b]">수익률 (시드 대비)</span>
+            <span id="ov-moomae-pnl" class="font-medium text-[#94a3b8]">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- VR 카드 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <span class="text-sm font-bold">VR</span>
+              <span id="ov-vr-status" class="text-xs ml-2 font-medium text-[#94a3b8]">--</span>
+            </div>
+            <button onclick="fetchVrGist()" class="text-[10px] text-[#475569] active:text-[#94a3b8]">🔄</button>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">평가금</p>
+              <p class="text-[15px] font-bold" id="ov-vr-eval">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">Pool</p>
+              <p class="text-[15px] font-bold" id="ov-vr-pool">--</p>
+            </div>
+          </div>
+          <div class="mt-2 flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
+            <span class="text-[#64748b]">할당 시드</span>
+            <span class="text-[#94a3b8]" id="ov-vr-alloc">--</span>
+            <span class="text-[#64748b]">달성률</span>
+            <span class="text-[#94a3b8]" id="ov-vr-achieve">--</span>
+          </div>
+          <div class="mt-1 flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
+            <span class="text-[#64748b]">수익률 (할당 대비)</span>
+            <span id="ov-vr-pnl" class="font-medium text-[#94a3b8]">--</span>
+          </div>
+        </div>
+        <button class="expand-btn w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between">
+          <span class="expand-label">더보기</span><span class="expand-arrow">▼</span>
+        </button>
+        <div class="expand-detail hidden px-4 pb-4 pt-3 space-y-2 border-t border-[#334155]">
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">보유수량</span><span id="ov-vr-shares">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">V2 (기준값)</span><span id="ov-vr-v2">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">Vlow</span><span id="ov-vr-vlow">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">Vhigh</span><span id="ov-vr-vhigh">--</span></div>
+          <div class="flex justify-between text-xs"><span class="text-[#94a3b8]">합계 (평가금+Pool)</span><span id="ov-vr-total">--</span></div>
+        </div>
+      </div>
+
+      <!-- Google Sheets 연동 카드 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-bold">Google Sheets</span>
+            <span class="text-[10px] text-[#64748b]" id="sheets-last-sync">동기화 기록 없음</span>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="showSheetsUpload()" class="flex-1 bg-emerald-700 text-white text-xs py-2 rounded-lg font-medium active:opacity-70">↑ Sheets에 올리기</button>
+            <button onclick="loadFromSheets()" class="flex-1 bg-[#0f172a] text-[#94a3b8] text-xs py-2 rounded-lg border border-[#334155] active:opacity-70">↓ 불러오기</button>
+          </div>
+        </div>
+        <!-- Upload 폼 -->
+        <div id="sheets-upload-section" class="hidden border-t border-[#334155] px-4 py-3 bg-[#0a1120]">
+          <p class="text-[10px] text-[#64748b] mb-2 font-medium">스냅샷 올리기</p>
+          <div class="mb-3">
+            <label class="text-[10px] text-[#64748b]">날짜</label>
+            <input type="date" id="sheets-upload-date" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+          </div>
+          <div id="sheets-preview" class="space-y-1.5 mb-3"></div>
+          <p class="text-[10px] text-[#94a3b8] mb-2 font-medium">예수금 / 추가 입력</p>
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <div>
+              <label class="text-[10px] text-[#64748b]">TCC 예수금 ($)</label>
+              <input type="number" id="sheets-cash-tcc" placeholder="0" step="100"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="text-[10px] text-[#64748b]">S사이클 예수금 ($)</label>
+              <input type="number" id="sheets-cash-sc" placeholder="0" step="100"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="text-[10px] text-[#64748b]">VR 합계 ($)</label>
+              <input type="number" id="sheets-total-vr" placeholder="0" step="100"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="text-[10px] text-[#64748b]">무매 합계 ($)</label>
+              <input type="number" id="sheets-total-moomae" placeholder="0" step="100"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="text-[10px] text-[#64748b]">퇴직연금 예수금 (₩)</label>
+              <input type="number" id="sheets-cash-pension" placeholder="0" step="10000"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="text-[10px] text-[#64748b]">국장단타 시드 (₩)</label>
+              <input type="number" id="sheets-seed-kstock" placeholder="0" step="100000"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="text-[10px] text-[#64748b]">국장단타 평가금 (₩)</label>
+              <input type="number" id="sheets-eval-kstock" placeholder="0" step="10000"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="text-[10px] text-[#64748b]">국장단타 예수금 (₩)</label>
+              <input type="number" id="sheets-cash-kstock" placeholder="0" step="10000"
+                class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            </div>
+          </div>
+          <div id="sheets-upload-status" class="hidden text-xs text-center mb-2 py-1 rounded-lg"></div>
+          <div class="flex gap-2">
+            <button onclick="document.getElementById('sheets-upload-section').classList.add('hidden')"
+              class="flex-1 bg-[#334155] text-[#94a3b8] text-xs py-2 rounded-lg active:opacity-70">취소</button>
+            <button onclick="uploadToSheets()"
+              class="flex-1 bg-emerald-600 text-white text-xs py-2 rounded-lg font-medium active:opacity-70">올리기</button>
+          </div>
+        </div>
+        <!-- 불러오기 결과 -->
+        <div id="sheets-load-section" class="hidden border-t border-[#334155] px-4 py-3">
+          <p class="text-[10px] text-[#64748b] mb-2 font-medium">최근 기록</p>
+          <div id="sheets-load-table" class="space-y-1.5"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════
+         TCC 탭
+    ══════════════════════════════════ -->
+    <div id="tab-tcc" class="tab-content hidden space-y-3">
+
+      <!-- 할당 시드 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] px-4 py-2.5 flex items-center justify-between">
+        <span class="text-[10px] text-[#64748b]">TCC 할당 시드</span>
+        <span class="text-sm font-bold" id="tcc-alloc-seed">--</span>
+      </div>
+
+      <!-- TQQQ 현재가 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] px-4 py-3 flex items-center justify-between">
+        <div>
+          <p class="text-[10px] text-[#64748b] mb-0.5">TQQQ 현재가</p>
+          <p class="text-xl font-bold" id="tqqq-price">--</p>
+          <p class="text-[10px] text-[#94a3b8] mt-0.5" id="tqqq-price-time">--</p>
+        </div>
+        <button onclick="fetchPrice()" class="text-xs bg-[#0f172a] text-[#94a3b8] px-3 py-2 rounded-lg border border-[#334155] active:opacity-70">🔄 새로고침</button>
+      </div>
+
+      <!-- TCC 합산 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] px-4 py-4">
+        <p class="text-[10px] text-[#64748b] mb-3">TCC 합산 현황</p>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <div class="bg-[#0f172a] rounded-lg p-3 text-center">
+            <p class="text-[10px] text-[#64748b] mb-1">T코어</p>
+            <p class="text-[15px] font-bold" id="tcc-tcore-val">--</p>
+          </div>
+          <div class="bg-[#0f172a] rounded-lg p-3 text-center">
+            <p class="text-[10px] text-[#64748b] mb-1">T사이클</p>
+            <p class="text-[15px] font-bold" id="tcc-tcycle-val">--</p>
+          </div>
+        </div>
+        <!-- 비율 바 -->
+        <div class="h-2 bg-[#0f172a] rounded-full overflow-hidden mb-2">
+          <div class="h-full bg-blue-500 rounded-full transition-all duration-500" id="tcc-ratio-bar" style="width:50%"></div>
+        </div>
+        <div class="flex justify-between text-[10px]">
+          <span class="text-blue-400" id="tcc-ratio-left">T코어 --</span>
+          <span class="text-[#64748b]" id="tcc-ratio-status">--</span>
+          <span class="text-[#94a3b8]" id="tcc-ratio-right">T사이클 --</span>
+        </div>
+        <div class="mt-3 pt-3 border-t border-[#334155]">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[10px] text-[#64748b]">T사이클 예수금</span>
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] text-[#475569]">$</span>
+              <input type="number" id="tcc-cash-input" placeholder="0" min="0" step="0.01"
+                class="w-28 bg-[#0f172a] border border-[#334155] rounded px-2 py-1 text-xs text-white outline-none focus:border-blue-500 text-right"
+                onchange="saveCash('tcc')">
+            </div>
+          </div>
+          <div class="flex justify-between text-[10px]">
+            <span class="text-[#64748b]">T사이클 합계</span>
+            <span class="text-[#f1f5f9] font-semibold" id="tcc-tcycle-total">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- T코어 섹션 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-bold">T코어</span>
+            <span class="text-xs text-[#94a3b8]">바이앤홀딩 · 연1회 리밸런싱</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">보유수량</p>
+              <p class="text-[15px] font-bold" id="tcore-shares">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">평가금</p>
+              <p class="text-[15px] font-bold" id="tcore-eval">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">평균단가</p>
+              <p class="text-[15px] font-bold" id="tcore-avg">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">수익률</p>
+              <p class="text-[15px] font-bold" id="tcore-pnl">--</p>
+            </div>
+          </div>
+        </div>
+        <button onclick="toggleSection('tcore-section', 'tcore-arrow')" class="w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between active:opacity-70">
+          <span>이력 · 수정</span>
+          <span id="tcore-arrow">▼</span>
+        </button>
+        <div id="tcore-section" class="hidden border-t border-[#334155]">
+          <!-- 이력 추가 폼 -->
+          <div class="px-4 py-3 bg-[#0a1120]">
+            <p class="text-[10px] text-[#64748b] mb-2 font-medium">이력 추가</p>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <label class="text-[10px] text-[#64748b]">날짜</label>
+                <input type="date" id="tcore-form-date" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">구분</label>
+                <select id="tcore-form-type" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+                  <option value="buy">매수</option>
+                  <option value="sell">매도</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">수량 (주)</label>
+                <input type="number" id="tcore-form-shares" placeholder="0" min="0" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">단가 ($)</label>
+                <input type="number" id="tcore-form-price" placeholder="0.00" step="0.01" min="0" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+            </div>
+            <button onclick="addHistory('tcore')" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded-lg font-medium active:opacity-70">저장</button>
+          </div>
+          <!-- 이력 테이블 -->
+          <div class="px-4 py-3">
+            <p class="text-[10px] text-[#64748b] mb-2 font-medium">거래 이력</p>
+            <div id="tcore-history-table"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- T사이클 섹션 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-bold">T사이클</span>
+            <span class="text-xs text-[#94a3b8]">사이클 매매</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">보유수량</p>
+              <p class="text-[15px] font-bold" id="tcycle-shares">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">평가금</p>
+              <p class="text-[15px] font-bold" id="tcycle-eval">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">평균단가</p>
+              <p class="text-[15px] font-bold" id="tcycle-avg">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">수익률</p>
+              <p class="text-[15px] font-bold" id="tcycle-pnl">--</p>
+            </div>
+          </div>
+        </div>
+        <button onclick="toggleSection('tcycle-section', 'tcycle-arrow')" class="w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between active:opacity-70">
+          <span>매매 기록 입력 · 이력</span>
+          <span id="tcycle-arrow">▼</span>
+        </button>
+        <div id="tcycle-section" class="hidden border-t border-[#334155]">
+          <!-- 입력 폼 -->
+          <div class="px-4 py-3 bg-[#0a1120]">
+            <p class="text-[10px] text-[#64748b] mb-2 font-medium">매매 기록 추가</p>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <label class="text-[10px] text-[#64748b]">날짜</label>
+                <input type="date" id="tcycle-form-date" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">구분</label>
+                <select id="tcycle-form-type" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+                  <option value="buy">매수</option>
+                  <option value="sell">매도</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">수량 (주)</label>
+                <input type="number" id="tcycle-form-shares" placeholder="0" min="0" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">단가 ($)</label>
+                <input type="number" id="tcycle-form-price" placeholder="0.00" step="0.01" min="0" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+            </div>
+            <button onclick="addHistory('tcycle')" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded-lg font-medium active:opacity-70">저장</button>
+          </div>
+          <!-- 이력 테이블 -->
+          <div class="px-4 py-3">
+            <p class="text-[10px] text-[#64748b] mb-2 font-medium">거래 이력</p>
+            <div id="tcycle-history-table"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════
+         S사이클 탭
+    ══════════════════════════════════ -->
+    <div id="tab-scycle" class="tab-content hidden space-y-3">
+
+      <!-- 할당 시드 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] px-4 py-2.5 flex items-center justify-between">
+        <span class="text-[10px] text-[#64748b]">S사이클 할당 시드</span>
+        <span class="text-sm font-bold" id="sc-alloc-seed">--</span>
+      </div>
+
+      <!-- SOXL 현재가 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] px-4 py-3 flex items-center justify-between">
+        <div>
+          <p class="text-[10px] text-[#64748b] mb-0.5">SOXL 현재가</p>
+          <p class="text-xl font-bold" id="soxl-price">--</p>
+          <p class="text-[10px] text-[#94a3b8] mt-0.5" id="soxl-price-time">--</p>
+        </div>
+        <button onclick="fetchSoxlPrice()" class="text-xs bg-[#0f172a] text-[#94a3b8] px-3 py-2 rounded-lg border border-[#334155] active:opacity-70">🔄 새로고침</button>
+      </div>
+
+      <!-- S사이클 현황 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-bold">S사이클</span>
+            <span class="text-xs text-[#94a3b8]">사이클 매매</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">보유수량</p>
+              <p class="text-[15px] font-bold" id="sc-shares">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">평가금</p>
+              <p class="text-[15px] font-bold" id="sc-eval">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">평균단가</p>
+              <p class="text-[15px] font-bold" id="sc-avg">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">수익률</p>
+              <p class="text-[15px] font-bold" id="sc-pnl">--</p>
+            </div>
+          </div>
+          <div class="mt-3 pt-3 border-t border-[#334155]">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] text-[#64748b]">예수금</span>
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] text-[#475569]">$</span>
+                <input type="number" id="sc-cash-input" placeholder="0" min="0" step="0.01"
+                  class="w-28 bg-[#0f172a] border border-[#334155] rounded px-2 py-1 text-xs text-white outline-none focus:border-blue-500 text-right"
+                  onchange="saveCash('sc')">
+              </div>
+            </div>
+            <div class="flex justify-between text-[10px]">
+              <span class="text-[#64748b]">합계</span>
+              <span class="text-[#f1f5f9] font-semibold" id="sc-total">--</span>
+            </div>
+          </div>
+        </div>
+        <button onclick="toggleSection('sc-section', 'sc-arrow')" class="w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between active:opacity-70">
+          <span>매매 기록 입력 · 이력</span>
+          <span id="sc-arrow">▼</span>
+        </button>
+        <div id="sc-section" class="hidden border-t border-[#334155]">
+          <!-- 입력 폼 -->
+          <div class="px-4 py-3 bg-[#0a1120]">
+            <p class="text-[10px] text-[#64748b] mb-2 font-medium">매매 기록 추가</p>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <label class="text-[10px] text-[#64748b]">날짜</label>
+                <input type="date" id="sc-form-date" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">구분</label>
+                <select id="sc-form-type" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+                  <option value="buy">매수</option>
+                  <option value="sell">매도</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">수량 (주)</label>
+                <input type="number" id="sc-form-shares" placeholder="0" min="0" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">단가 ($)</label>
+                <input type="number" id="sc-form-price" placeholder="0.00" step="0.01" min="0" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+            </div>
+            <button onclick="addScHistory()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded-lg font-medium active:opacity-70">저장</button>
+          </div>
+          <!-- 이력 테이블 -->
+          <div class="px-4 py-3">
+            <p class="text-[10px] text-[#64748b] mb-2 font-medium">거래 이력</p>
+            <div id="sc-history-table"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════
+         퇴직연금 탭
+    ══════════════════════════════════ -->
+    <div id="tab-pension" class="tab-content hidden space-y-3">
+
+      <!-- 현황 요약 카드 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-bold">퇴직연금 현황</span>
+            <button onclick="fetchAllPensionPrices()" class="text-xs bg-[#0f172a] text-[#94a3b8] px-2 py-1 rounded-lg border border-[#334155] active:opacity-70">🔄 전체 새로고침</button>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">총 시드</p>
+              <p class="text-[13px] font-bold" id="pension-total-seed">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">합산 평가금</p>
+              <p class="text-[13px] font-bold" id="pension-total-eval">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">수익률</p>
+              <p class="text-[13px] font-bold" id="pension-pnl">--</p>
+            </div>
+          </div>
+        </div>
+        <!-- 시드 이력 -->
+        <button onclick="toggleSection('pension-seed-section', 'pension-seed-arrow')" class="w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between active:opacity-70">
+          <span>시드 이력 · 추가</span>
+          <span id="pension-seed-arrow">▼</span>
+        </button>
+        <div id="pension-seed-section" class="hidden border-t border-[#334155]">
+          <div class="px-4 py-3 bg-[#0a1120]">
+            <p class="text-[10px] text-[#64748b] mb-2 font-medium">시드 추가</p>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <label class="text-[10px] text-[#64748b]">날짜</label>
+                <input type="date" id="pension-seed-date" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">구분</label>
+                <select id="pension-seed-note" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+                  <option value="최초">최초</option>
+                  <option value="추가">추가</option>
+                </select>
+              </div>
+              <div class="col-span-2">
+                <label class="text-[10px] text-[#64748b]">금액 (₩)</label>
+                <input type="number" id="pension-seed-amount" placeholder="0" min="0" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+            </div>
+            <button onclick="addPensionSeed()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded-lg font-medium active:opacity-70">저장</button>
+          </div>
+          <div class="px-4 py-3">
+            <p class="text-[10px] text-[#64748b] mb-2 font-medium">시드 이력</p>
+            <div id="pension-seed-table"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 종목별 현황 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <p class="text-sm font-bold mb-3">종목별 현황</p>
+          <div id="pension-holdings-list" class="space-y-2"></div>
+        </div>
+        <!-- 종목 추가/관리 -->
+        <button onclick="toggleSection('pension-mgmt-section', 'pension-mgmt-arrow')" class="w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between active:opacity-70">
+          <span>종목 추가 · 관리</span>
+          <span id="pension-mgmt-arrow">▼</span>
+        </button>
+        <div id="pension-mgmt-section" class="hidden border-t border-[#334155]">
+          <div class="px-4 py-3 bg-[#0a1120]">
+            <p class="text-[10px] text-[#64748b] mb-2 font-medium">종목 추가</p>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <label class="text-[10px] text-[#64748b]">종목명</label>
+                <input type="text" id="pension-new-name" placeholder="예: 미 나스닥 ETF" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">티커코드 (선택)</label>
+                <input type="text" id="pension-new-ticker" placeholder="예: 157450" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+              <div class="col-span-2">
+                <label class="text-[10px] text-[#64748b]">보유수량 (주)</label>
+                <input type="number" id="pension-new-shares" placeholder="0" min="0" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+            </div>
+            <button onclick="addPensionHolding()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-2 rounded-lg font-medium active:opacity-70">추가</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════
+         국장 탭
+    ══════════════════════════════════ -->
+    <div id="tab-kstock" class="tab-content hidden space-y-3">
+
+      <!-- 시드 표시 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] px-4 py-3 flex items-center justify-between">
+        <div>
+          <p class="text-[10px] text-[#64748b] mb-0.5">시드</p>
+          <p class="text-xl font-bold" id="kstock-seed-display">--</p>
+        </div>
+        <button onclick="toggleSection('kstock-seed-section','kstock-seed-arrow')" class="text-xs bg-[#0f172a] text-[#94a3b8] px-3 py-2 rounded-lg border border-[#334155] active:opacity-70">설정 <span id="kstock-seed-arrow">▼</span></button>
+      </div>
+      <div id="kstock-seed-section" class="hidden bg-[#1e293b] rounded-xl border border-[#334155] px-4 py-3">
+        <p class="text-[10px] text-[#64748b] mb-2">시드 설정 (₩)</p>
+        <div class="flex gap-2">
+          <input type="number" id="kstock-seed-input" placeholder="0" step="100000"
+            class="flex-1 bg-[#0f172a] border border-[#334155] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500">
+          <button onclick="saveKstockSeed()" class="bg-blue-600 text-white text-xs px-4 py-2 rounded-lg active:opacity-70">저장</button>
+        </div>
+      </div>
+
+      <!-- 현황 카드 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-bold">국장 현황</span>
+            <span class="text-[10px] text-[#94a3b8]" id="kstock-last-date">기록 없음</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">평가금</p>
+              <p class="text-[15px] font-bold" id="kstock-eval">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">예수금</p>
+              <p class="text-[15px] font-bold" id="kstock-cash">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">합계</p>
+              <p class="text-[15px] font-bold" id="kstock-total">--</p>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3">
+              <p class="text-[10px] text-[#64748b] mb-1">수익률</p>
+              <p class="text-[15px] font-bold" id="kstock-pnl">--</p>
+            </div>
+          </div>
+        </div>
+        <button onclick="toggleSection('kstock-add-section','kstock-add-arrow')" class="w-full px-4 py-2 text-xs text-[#64748b] border-t border-[#334155] flex items-center justify-between active:opacity-70">
+          <span>기록 추가</span><span id="kstock-add-arrow">▼</span>
+        </button>
+        <div id="kstock-add-section" class="hidden border-t border-[#334155]">
+          <div class="px-4 py-3 bg-[#0a1120]">
+            <div class="grid grid-cols-2 gap-2 mb-3">
+              <div>
+                <label class="text-[10px] text-[#64748b]">날짜</label>
+                <input type="date" id="kstock-form-date" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">평가금 (₩)</label>
+                <input type="number" id="kstock-form-eval" placeholder="0" step="10000" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-[10px] text-[#64748b]">예수금 (₩)</label>
+                <input type="number" id="kstock-form-cash" placeholder="0" step="10000" class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              </div>
+            </div>
+            <button onclick="addKstockRecord()" class="w-full bg-blue-600 text-white text-xs py-2 rounded-lg active:opacity-70">저장</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 누적 기록 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] px-4 py-4">
+        <p class="text-sm font-bold mb-3">누적 기록</p>
+        <div id="kstock-history-table"></div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════
+         무매 탭
+    ══════════════════════════════════ -->
+    <div id="tab-moomae" class="tab-content hidden -mx-4 -mt-4">
+      <iframe src="https://gjdnddd.github.io/mmNoti/" class="w-full border-0 block" style="height:calc(100vh - 101px)"></iframe>
+    </div>
+
+    <!-- ══════════════════════════════════
+         VR 탭
+    ══════════════════════════════════ -->
+    <div id="tab-vr" class="tab-content hidden -mx-4 -mt-4">
+      <iframe src="https://gjdnddd.github.io/VR_dashboard/" class="w-full border-0 block" style="height:calc(100vh - 101px)"></iframe>
+    </div>
+
+  </div><!-- /p-4 -->
+
+  <script>
+  // ══════════════════════════════════
+  // 탭 전환
+  // ══════════════════════════════════
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('border-blue-400', 'text-blue-400');
+        b.classList.add('border-transparent', 'text-[#64748b]');
+      });
+      btn.classList.add('border-blue-400', 'text-blue-400');
+      btn.classList.remove('border-transparent', 'text-[#64748b]');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+      document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+    });
+  });
+
+  // ══════════════════════════════════
+  // 전략현황 탭 아코디언
+  // ══════════════════════════════════
+  document.querySelectorAll('.expand-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const detail = btn.nextElementSibling;
+      const isHidden = detail.classList.contains('hidden');
+      detail.classList.toggle('hidden');
+      btn.querySelector('.expand-arrow').textContent = isHidden ? '▲' : '▼';
+      btn.querySelector('.expand-label').textContent = isHidden ? '접기' : '더보기';
+    });
+  });
+
+  // ══════════════════════════════════
+  // 섹션 토글 (TCC 내부)
+  // ══════════════════════════════════
+  function toggleSection(id, arrowId) {
+    const el = document.getElementById(id);
+    const arrow = document.getElementById(arrowId);
+    const isHidden = el.classList.contains('hidden');
+    el.classList.toggle('hidden');
+    if (arrow) arrow.textContent = isHidden ? '▲' : '▼';
+  }
+
+  // ══════════════════════════════════
+  // 데이터 계산
+  // ══════════════════════════════════
+  function calcPosition(history) {
+    let buyShares = 0, buyAmount = 0, sellShares = 0;
+    history.forEach(r => {
+      if (r.type === 'buy') {
+        buyShares += r.shares;
+        buyAmount += r.shares * r.price;
+      } else {
+        sellShares += r.shares;
+      }
+    });
+    const currentShares = buyShares - sellShares;
+    const avgBuyPrice = buyShares > 0 ? buyAmount / buyShares : 0;
+    const costBasis = avgBuyPrice * currentShares;
+    return { currentShares, avgBuyPrice, costBasis };
+  }
+
+  // ══════════════════════════════════
+  // TCC 탭 렌더링
+  // ══════════════════════════════════
+  function renderTccTab() {
+    const price = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+    const tcoreHist = JSON.parse(localStorage.getItem('tcc_tcore') || '[]');
+    const tcycleHist = JSON.parse(localStorage.getItem('tcc_tcycle') || '[]');
+
+    const tc = calcPosition(tcoreHist);
+    const ts = calcPosition(tcycleHist);
+    const tcoreEval = tc.currentShares * price;
+    const tcycleEval = ts.currentShares * price;
+
+    const fmt$ = v => '$' + v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+    const pctClass = v => 'text-[15px] font-bold ' + (v > 0 ? 'text-green-400' : v < 0 ? 'text-red-400' : 'text-[#f1f5f9]');
+
+    // T코어 현황
+    document.getElementById('tcore-shares').textContent = tc.currentShares + '주';
+    document.getElementById('tcore-avg').textContent = tc.avgBuyPrice > 0 ? '$' + tc.avgBuyPrice.toFixed(2) : '--';
+    if (price > 0) {
+      document.getElementById('tcore-eval').textContent = fmt$(tcoreEval);
+      if (tc.costBasis > 0) {
+        const pnl = (tcoreEval / tc.costBasis - 1) * 100;
+        const el = document.getElementById('tcore-pnl');
+        el.textContent = fmtPct(pnl);
+        el.className = pctClass(pnl);
+      }
+    }
+
+    // T사이클 현황
+    document.getElementById('tcycle-shares').textContent = ts.currentShares + '주';
+    document.getElementById('tcycle-avg').textContent = ts.avgBuyPrice > 0 ? '$' + ts.avgBuyPrice.toFixed(2) : '--';
+    if (price > 0) {
+      document.getElementById('tcycle-eval').textContent = fmt$(tcycleEval);
+      if (ts.costBasis > 0) {
+        const pnl = (tcycleEval / ts.costBasis - 1) * 100;
+        const el = document.getElementById('tcycle-pnl');
+        el.textContent = fmtPct(pnl);
+        el.className = pctClass(pnl);
+      }
+    }
+
+    // TCC 합산
+    const tccCash = parseFloat(localStorage.getItem('tcc_cash') || '0');
+    const cashInput = document.getElementById('tcc-cash-input');
+    if (cashInput && !cashInput.matches(':focus')) cashInput.value = tccCash > 0 ? tccCash : '';
+    document.getElementById('tcc-tcore-val').textContent = price > 0 ? fmt$(tcoreEval) : '--';
+    document.getElementById('tcc-tcycle-val').textContent = price > 0 ? fmt$(tcycleEval) : '--';
+    if (price > 0) {
+      document.getElementById('tcc-tcycle-total').textContent = fmt$(tcycleEval + tccCash);
+    }
+    const total = tcoreEval + tcycleEval;
+    if (total > 0) {
+      const coreRatio = (tcoreEval / total) * 100;
+      document.getElementById('tcc-ratio-bar').style.width = coreRatio + '%';
+      document.getElementById('tcc-ratio-left').textContent = 'T코어 ' + coreRatio.toFixed(0) + '%';
+      document.getElementById('tcc-ratio-right').textContent = 'T사이클 ' + (100 - coreRatio).toFixed(0) + '%';
+      const diff = Math.abs(coreRatio - 50);
+      document.getElementById('tcc-ratio-status').textContent =
+        diff < 3 ? '✅ 균형' : coreRatio > 50 ? '⚠ 코어 과다' : '⚠ 사이클 과다';
+    }
+
+    // 거래 이력 테이블
+    renderHistoryTable('tcore-history-table', tcoreHist, 'tcore');
+    renderHistoryTable('tcycle-history-table', tcycleHist, 'tcycle');
+
+    // 전략현황 탭 TCC 카드 업데이트
+    renderOverviewTcc(tc, ts, price, tcoreEval, tcycleEval);
+  }
+
+  function renderHistoryTable(containerId, history, type) {
+    const el = document.getElementById(containerId);
+    if (!history.length) {
+      el.innerHTML = '<p class="text-[10px] text-[#64748b] text-center py-3">기록 없음</p>';
+      return;
+    }
+    const sorted = [...history].sort((a, b) => b.date.localeCompare(a.date));
+    el.innerHTML = sorted.map(r => `
+      <div class="flex items-center gap-2 text-xs bg-[#0f172a] rounded-lg px-3 py-2 mb-1.5">
+        <span class="text-[#94a3b8] w-16 flex-shrink-0">${r.date.slice(5)}</span>
+        <span class="w-8 flex-shrink-0 ${r.type === 'buy' ? 'text-blue-400' : 'text-orange-400'}">${r.type === 'buy' ? '매수' : '매도'}</span>
+        <span class="flex-1">${r.shares}주</span>
+        <span class="flex-1 text-right">$${Number(r.price).toFixed(2)}</span>
+        <button onclick="deleteRecord('${type}', ${r.id})" class="text-[#475569] hover:text-red-400 text-[11px] ml-1 flex-shrink-0">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function renderOverviewTcc(tc, ts, price, tcoreEval, tcycleEval) {
+    const fmt$ = v => '$' + v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+
+    document.getElementById('ov-tcore-shares').textContent = tc.currentShares + '주';
+    document.getElementById('ov-tcore-avg').textContent = tc.avgBuyPrice > 0 ? '$' + tc.avgBuyPrice.toFixed(2) : '--';
+    document.getElementById('ov-tcycle-shares').textContent = ts.currentShares + '주';
+    document.getElementById('ov-tcycle-avg').textContent = ts.avgBuyPrice > 0 ? '$' + ts.avgBuyPrice.toFixed(2) : '--';
+
+    if (price > 0) {
+      document.getElementById('ov-tcore-eval').textContent = fmt$(tcoreEval);
+      document.getElementById('ov-tcycle-eval').textContent = fmt$(tcycleEval);
+      if (tc.costBasis > 0) {
+        const pnl = (tcoreEval / tc.costBasis - 1) * 100;
+        const el = document.getElementById('ov-tcore-pnl');
+        el.textContent = fmtPct(pnl);
+        el.className = 'text-xs mt-0.5 ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+      }
+      if (ts.costBasis > 0) {
+        const pnl = (tcycleEval / ts.costBasis - 1) * 100;
+        const el = document.getElementById('ov-tcycle-pnl');
+        el.textContent = fmtPct(pnl);
+        el.className = 'text-xs mt-0.5 ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+      }
+      const total = tcoreEval + tcycleEval;
+      const tccCashOv = parseFloat(localStorage.getItem('tcc_cash') || '0');
+      document.getElementById('ov-tcc-total').textContent = fmt$(total);
+      document.getElementById('ov-tcc-cash').textContent = tccCashOv > 0 ? fmt$(tccCashOv) : '--';
+      document.getElementById('ov-tcc-grand').textContent = fmt$(total + tccCashOv);
+      if (total > 0) {
+        const r = tcoreEval / total;
+        document.getElementById('ov-tcc-ratio').textContent =
+          r.toFixed(2) + ' : ' + (1 - r).toFixed(2);
+      }
+    }
+  }
+
+  // ══════════════════════════════════
+  // 이력 추가 / 삭제
+  // ══════════════════════════════════
+  function addHistory(type) {
+    const date = document.getElementById(type + '-form-date').value;
+    const tradeType = document.getElementById(type + '-form-type').value;
+    const shares = parseFloat(document.getElementById(type + '-form-shares').value);
+    const price = parseFloat(document.getElementById(type + '-form-price').value);
+    if (!date || isNaN(shares) || shares <= 0 || isNaN(price) || price <= 0) {
+      alert('날짜, 수량, 단가를 모두 올바르게 입력해주세요.');
+      return;
+    }
+    const key = 'tcc_' + type;
+    const history = JSON.parse(localStorage.getItem(key) || '[]');
+    history.push({ id: Date.now(), date, type: tradeType, shares, price });
+    localStorage.setItem(key, JSON.stringify(history));
+    document.getElementById(type + '-form-shares').value = '';
+    document.getElementById(type + '-form-price').value = '';
+    renderTccTab();
+  }
+
+  function deleteRecord(type, id) {
+    if (!confirm('이 기록을 삭제할까요?')) return;
+    const key = 'tcc_' + type;
+    let history = JSON.parse(localStorage.getItem(key) || '[]');
+    history = history.filter(r => r.id !== id);
+    localStorage.setItem(key, JSON.stringify(history));
+    renderTccTab();
+  }
+
+  // renderHistoryTable에서 sc 타입 삭제 버튼 연결
+  // (sc는 deleteScRecord 사용, tcc는 deleteRecord 사용)
+  // → renderHistoryTable을 type에 따라 분기
+  const _origRenderHistoryTable = renderHistoryTable;
+  // sc용 테이블 렌더링은 deleteScRecord 호출
+  function renderScHistoryTable(containerId, history) {
+    const el = document.getElementById(containerId);
+    if (!history.length) {
+      el.innerHTML = '<p class="text-[10px] text-[#64748b] text-center py-3">기록 없음</p>';
+      return;
+    }
+    const sorted = [...history].sort((a, b) => b.date.localeCompare(a.date));
+    el.innerHTML = sorted.map(r => `
+      <div class="flex items-center gap-2 text-xs bg-[#0f172a] rounded-lg px-3 py-2 mb-1.5">
+        <span class="text-[#94a3b8] w-16 flex-shrink-0">${r.date.slice(5)}</span>
+        <span class="w-8 flex-shrink-0 ${r.type === 'buy' ? 'text-blue-400' : 'text-orange-400'}">${r.type === 'buy' ? '매수' : '매도'}</span>
+        <span class="flex-1">${r.shares}주</span>
+        <span class="flex-1 text-right">$${Number(r.price).toFixed(2)}</span>
+        <button onclick="deleteScRecord(${r.id})" class="text-[#475569] hover:text-red-400 text-[11px] ml-1 flex-shrink-0">✕</button>
+      </div>
+    `).join('');
+  }
+
+  // ══════════════════════════════════
+  // TQQQ 현재가 fetch
+  // ══════════════════════════════════
+  async function fetchPrice() {
+    const priceEl = document.getElementById('tqqq-price');
+    const timeEl = document.getElementById('tqqq-price-time');
+    priceEl.textContent = '로딩 중...';
+
+    const base = 'https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=1d';
+    const urls = [
+      base,
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(base)
+    ];
+
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        const data = await res.json();
+        const p = data.chart.result[0].meta.regularMarketPrice;
+        localStorage.setItem('tcc_tqqq_price', p);
+        priceEl.textContent = '$' + p.toFixed(2);
+        timeEl.textContent = new Date().toLocaleString('ko-KR',
+          { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준';
+        renderTccTab();
+        if (vrGistData)    renderVrCard(vrGistData);
+        if (mumaeGistData) renderMumaeCard(mumaeGistData);
+        return;
+      } catch (_) { continue; }
+    }
+
+    priceEl.textContent = 'fetch 실패';
+    timeEl.textContent = '잠시 후 다시 시도해주세요';
+  }
+
+  // ══════════════════════════════════
+  // S사이클 렌더링
+  // ══════════════════════════════════
+  function renderScTab() {
+    const price = parseFloat(localStorage.getItem('sc_soxl_price') || '0');
+    const history = JSON.parse(localStorage.getItem('sc_history') || '[]');
+    const pos = calcPosition(history);
+    const evalVal = pos.currentShares * price;
+
+    const fmt$ = v => '$' + v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+    const pctClass = v => 'text-[15px] font-bold ' + (v > 0 ? 'text-green-400' : v < 0 ? 'text-red-400' : 'text-[#f1f5f9]');
+
+    const scCash = parseFloat(localStorage.getItem('sc_cash') || '0');
+    const scCashInput = document.getElementById('sc-cash-input');
+    if (scCashInput && !scCashInput.matches(':focus')) scCashInput.value = scCash > 0 ? scCash : '';
+
+    document.getElementById('sc-shares').textContent = pos.currentShares + '주';
+    document.getElementById('sc-avg').textContent = pos.avgBuyPrice > 0 ? '$' + pos.avgBuyPrice.toFixed(2) : '--';
+
+    if (price > 0) {
+      document.getElementById('sc-eval').textContent = fmt$(evalVal);
+      document.getElementById('sc-total').textContent = fmt$(evalVal + scCash);
+      if (pos.costBasis > 0) {
+        const pnl = (evalVal / pos.costBasis - 1) * 100;
+        const el = document.getElementById('sc-pnl');
+        el.textContent = fmtPct(pnl);
+        el.className = pctClass(pnl);
+      }
+    }
+
+    renderScHistoryTable('sc-history-table', history);
+
+    // 전략현황 탭 S사이클 카드 업데이트
+    document.getElementById('ov-sc-shares').textContent = pos.currentShares + '주';
+    document.getElementById('ov-sc-shares2').textContent = pos.currentShares + '주';
+    document.getElementById('ov-sc-avg').textContent = pos.avgBuyPrice > 0 ? '$' + pos.avgBuyPrice.toFixed(2) : '--';
+    document.getElementById('ov-sc-cash').textContent = scCash > 0 ? fmt$(scCash) : '--';
+    if (price > 0) {
+      document.getElementById('ov-sc-eval').textContent = fmt$(evalVal);
+      document.getElementById('ov-sc-eval2').textContent = fmt$(evalVal);
+      document.getElementById('ov-sc-grand').textContent = fmt$(evalVal + scCash);
+      if (pos.costBasis > 0) {
+        const pnl = (evalVal / pos.costBasis - 1) * 100;
+        const el = document.getElementById('ov-sc-pnl');
+        el.textContent = fmtPct(pnl);
+        el.className = 'text-xs mt-0.5 ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+      }
+    }
+  }
+
+  function addScHistory() {
+    const date = document.getElementById('sc-form-date').value;
+    const tradeType = document.getElementById('sc-form-type').value;
+    const shares = parseFloat(document.getElementById('sc-form-shares').value);
+    const price = parseFloat(document.getElementById('sc-form-price').value);
+    if (!date || isNaN(shares) || shares <= 0 || isNaN(price) || price <= 0) {
+      alert('날짜, 수량, 단가를 모두 올바르게 입력해주세요.');
+      return;
+    }
+    const history = JSON.parse(localStorage.getItem('sc_history') || '[]');
+    history.push({ id: Date.now(), date, type: tradeType, shares, price });
+    localStorage.setItem('sc_history', JSON.stringify(history));
+    document.getElementById('sc-form-shares').value = '';
+    document.getElementById('sc-form-price').value = '';
+    renderScTab();
+  }
+
+  function deleteScRecord(id) {
+    if (!confirm('이 기록을 삭제할까요?')) return;
+    let history = JSON.parse(localStorage.getItem('sc_history') || '[]');
+    history = history.filter(r => r.id !== id);
+    localStorage.setItem('sc_history', JSON.stringify(history));
+    renderScTab();
+  }
+
+  function saveCash(strategy) {
+    const inputId = strategy === 'tcc' ? 'tcc-cash-input' : 'sc-cash-input';
+    const val = parseFloat(document.getElementById(inputId).value) || 0;
+    localStorage.setItem(strategy + '_cash', val.toString());
+    if (strategy === 'tcc') renderTccTab();
+    else renderScTab();
+    updateAllocAndAchieve();
+    pushInvestData();
+  }
+
+  // ══════════════════════════════════
+  // 퇴직연금
+  // ══════════════════════════════════
+  const PENSION_DEFAULTS = [
+    { id: 1, name: '국장 ETF',     ticker: '0069M0', shares: 0 },
+    { id: 2, name: '미 나스닥 ETF', ticker: '157450', shares: 0 },
+    { id: 3, name: '미 반도체 ETF', ticker: '232080', shares: 0 },
+    { id: 4, name: '단기통안채',    ticker: '390390', shares: 0 },
+    { id: 5, name: '코스닥150 ETF', ticker: '0046A0', shares: 0 }
+  ];
+
+  function getPensionHoldings() {
+    const s = localStorage.getItem('pension_holdings');
+    return s ? JSON.parse(s) : JSON.parse(JSON.stringify(PENSION_DEFAULTS));
+  }
+  function savePensionHoldings(h) { localStorage.setItem('pension_holdings', JSON.stringify(h)); }
+  function getPensionPrices()  { return JSON.parse(localStorage.getItem('pension_prices')  || '{}'); }
+  function getPensionSeeds()   { return JSON.parse(localStorage.getItem('pension_seeds')   || '[]'); }
+
+  function renderPensionTab() {
+    const holdings = getPensionHoldings();
+    const prices   = getPensionPrices();
+    const seeds    = getPensionSeeds();
+
+    const fmtW   = v => '₩' + Math.round(v).toLocaleString('ko-KR');
+    const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+
+    const totalSeed = seeds.reduce((s, r) => s + r.amount, 0);
+    const totalEval = holdings.reduce((s, h) => s + (h.shares * (prices[h.ticker] || 0)), 0);
+    const pnl = totalSeed > 0 ? (totalEval / totalSeed - 1) * 100 : null;
+
+    // 현황 카드
+    document.getElementById('pension-total-seed').textContent = totalSeed > 0 ? fmtW(totalSeed) : '--';
+    document.getElementById('pension-total-eval').textContent = totalEval > 0 ? fmtW(totalEval) : '--';
+    const pnlEl = document.getElementById('pension-pnl');
+    if (pnl !== null) {
+      pnlEl.textContent = fmtPct(pnl);
+      pnlEl.className = 'text-[13px] font-bold ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+    }
+
+    // 종목별 리스트
+    const listEl = document.getElementById('pension-holdings-list');
+    listEl.innerHTML = holdings.length ? holdings.map((h, i) => {
+      const price = prices[h.ticker] || 0;
+      const ev    = h.shares * price;
+      return `
+        <div class="bg-[#0f172a] rounded-lg p-3">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <span class="text-xs font-medium">${h.name}</span>
+              <span class="text-[10px] text-[#64748b] ml-1.5">${h.ticker || '—'}</span>
+            </div>
+            <div class="flex gap-1.5">
+              ${i > 0 ? `<button onclick="movePensionHolding(${h.id},'up')" class="text-[10px] text-[#94a3b8] bg-[#1e293b] border border-[#334155] px-1.5 py-0.5 rounded">▲</button>` : ''}
+              ${i < holdings.length - 1 ? `<button onclick="movePensionHolding(${h.id},'down')" class="text-[10px] text-[#94a3b8] bg-[#1e293b] border border-[#334155] px-1.5 py-0.5 rounded">▼</button>` : ''}
+              ${h.ticker ? `<button onclick="fetchPensionPrice('${h.ticker}')" class="text-[10px] text-[#94a3b8] bg-[#1e293b] border border-[#334155] px-1.5 py-0.5 rounded">🔄</button>` : ''}
+              <button onclick="editPensionHolding(${h.id})" class="text-[10px] text-[#94a3b8] bg-[#1e293b] border border-[#334155] px-1.5 py-0.5 rounded">✏</button>
+              <button onclick="deletePensionHolding(${h.id})" class="text-[10px] text-[#64748b] bg-[#1e293b] border border-[#334155] px-1.5 py-0.5 rounded">✕</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <p class="text-[10px] text-[#64748b] mb-0.5">현재가</p>
+              <p class="text-xs font-medium">${price > 0 ? '₩' + price.toLocaleString('ko-KR') : '--'}</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-[#64748b] mb-0.5">보유수량</p>
+              <input type="number" value="${h.shares}" min="0"
+                onchange="updatePensionShares(${h.id}, this.value)"
+                class="w-full bg-[#1e293b] border border-[#334155] rounded px-1.5 py-1 text-xs text-white outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <p class="text-[10px] text-[#64748b] mb-0.5">평가금</p>
+              <p class="text-xs font-medium">${ev > 0 ? fmtW(ev) : '--'}</p>
+            </div>
+          </div>
+        </div>`;
+    }).join('') : '<p class="text-[10px] text-[#64748b] text-center py-3">종목 없음</p>';
+
+    // 시드 이력
+    const seeds2 = [...seeds].sort((a, b) => b.date.localeCompare(a.date));
+    document.getElementById('pension-seed-table').innerHTML = seeds2.length
+      ? seeds2.map(s => `
+          <div class="flex items-center gap-2 text-xs bg-[#0f172a] rounded-lg px-3 py-2 mb-1.5">
+            <span class="text-[#94a3b8] w-16 flex-shrink-0">${s.date.slice(5)}</span>
+            <span class="${s.note === '최초' ? 'text-blue-400' : 'text-green-400'} flex-shrink-0">${s.note}</span>
+            <span class="flex-1 text-right">₩${Number(s.amount).toLocaleString('ko-KR')}</span>
+            <button onclick="deletePensionSeed(${s.id})" class="text-[#475569] hover:text-red-400 text-[11px] ml-1 flex-shrink-0">✕</button>
+          </div>`)
+        .join('')
+      : '<p class="text-[10px] text-[#64748b] text-center py-3">시드 기록 없음</p>';
+
+    // 전략현황 탭 카드 업데이트
+    document.getElementById('ov-pension-count').textContent = holdings.length + '종목';
+    document.getElementById('ov-pension-eval').textContent = totalEval > 0 ? fmtW(totalEval) : '--';
+    if (pnl !== null) {
+      const el = document.getElementById('ov-pension-pnl');
+      el.textContent = fmtPct(pnl);
+      el.className = 'text-[15px] font-bold ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+    }
+    document.getElementById('ov-pension-detail').innerHTML = holdings.map(h => {
+      const ev = h.shares * (prices[h.ticker] || 0);
+      return `<div class="flex justify-between text-xs">
+        <span class="text-[#94a3b8]">${h.name}</span>
+        <span>${ev > 0 ? fmtW(ev) : '--'}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function addPensionSeed() {
+    const date   = document.getElementById('pension-seed-date').value;
+    const note   = document.getElementById('pension-seed-note').value;
+    const amount = parseFloat(document.getElementById('pension-seed-amount').value);
+    if (!date || isNaN(amount) || amount <= 0) { alert('날짜와 금액을 입력해주세요.'); return; }
+    const seeds = getPensionSeeds();
+    seeds.push({ id: Date.now(), date, amount, note });
+    localStorage.setItem('pension_seeds', JSON.stringify(seeds));
+    document.getElementById('pension-seed-amount').value = '';
+    renderPensionTab();
+  }
+
+  function deletePensionSeed(id) {
+    if (!confirm('시드 기록을 삭제할까요?')) return;
+    const seeds = getPensionSeeds().filter(s => s.id !== id);
+    localStorage.setItem('pension_seeds', JSON.stringify(seeds));
+    renderPensionTab();
+  }
+
+  function addPensionHolding() {
+    const name   = document.getElementById('pension-new-name').value.trim();
+    const ticker = document.getElementById('pension-new-ticker').value.trim();
+    const shares = parseFloat(document.getElementById('pension-new-shares').value) || 0;
+    if (!name) { alert('종목명을 입력해주세요.'); return; }
+    const holdings = getPensionHoldings();
+    holdings.push({ id: Date.now(), name, ticker, shares });
+    savePensionHoldings(holdings);
+    ['pension-new-name', 'pension-new-ticker', 'pension-new-shares'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    renderPensionTab();
+  }
+
+  function editPensionHolding(id) {
+    const holdings = getPensionHoldings();
+    const h = holdings.find(x => x.id === id);
+    if (!h) return;
+    const newName   = prompt('종목명:', h.name);
+    if (newName === null) return;
+    const newTicker = prompt('티커코드 (없으면 빈칸):', h.ticker);
+    if (newTicker === null) return;
+    h.name   = newName.trim()   || h.name;
+    h.ticker = newTicker.trim();
+    savePensionHoldings(holdings);
+    renderPensionTab();
+  }
+
+  function deletePensionHolding(id) {
+    if (!confirm('종목을 삭제할까요?')) return;
+    savePensionHoldings(getPensionHoldings().filter(h => h.id !== id));
+    renderPensionTab();
+  }
+
+  function movePensionHolding(id, dir) {
+    const holdings = getPensionHoldings();
+    const idx = holdings.findIndex(h => h.id === id);
+    if (dir === 'up' && idx > 0) {
+      [holdings[idx - 1], holdings[idx]] = [holdings[idx], holdings[idx - 1]];
+    } else if (dir === 'down' && idx < holdings.length - 1) {
+      [holdings[idx], holdings[idx + 1]] = [holdings[idx + 1], holdings[idx]];
+    }
+    savePensionHoldings(holdings);
+    renderPensionTab();
+  }
+
+  function updatePensionShares(id, value) {
+    const holdings = getPensionHoldings();
+    const h = holdings.find(x => x.id === id);
+    if (h) { h.shares = parseFloat(value) || 0; savePensionHoldings(holdings); renderPensionTab(); }
+  }
+
+  async function fetchPensionPrice(ticker) {
+    if (!ticker) return;
+    const base = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}.KS?interval=1d&range=1d`;
+    const urls = [base, 'https://api.allorigins.win/raw?url=' + encodeURIComponent(base)];
+    for (const url of urls) {
+      try {
+        const res  = await fetch(url, { cache: 'no-store' });
+        const data = await res.json();
+        const p    = data.chart.result[0].meta.regularMarketPrice;
+        const prices = getPensionPrices();
+        prices[ticker] = p;
+        localStorage.setItem('pension_prices', JSON.stringify(prices));
+        renderPensionTab();
+        return;
+      } catch (_) { continue; }
+    }
+  }
+
+  async function fetchAllPensionPrices() {
+    const holdings = getPensionHoldings();
+    for (const h of holdings) { if (h.ticker) await fetchPensionPrice(h.ticker); }
+  }
+
+  async function fetchSoxlPrice() {
+    const priceEl = document.getElementById('soxl-price');
+    const timeEl = document.getElementById('soxl-price-time');
+    priceEl.textContent = '로딩 중...';
+
+    const base = 'https://query1.finance.yahoo.com/v8/finance/chart/SOXL?interval=1d&range=1d';
+    const urls = [
+      base,
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(base)
+    ];
+
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        const data = await res.json();
+        const p = data.chart.result[0].meta.regularMarketPrice;
+        localStorage.setItem('sc_soxl_price', p);
+        priceEl.textContent = '$' + p.toFixed(2);
+        timeEl.textContent = new Date().toLocaleString('ko-KR',
+          { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준';
+        renderScTab();
+        return;
+      } catch (_) { continue; }
+    }
+
+    priceEl.textContent = 'fetch 실패';
+    timeEl.textContent = '잠시 후 다시 시도해주세요';
+  }
+
+  // ══════════════════════════════════
+  // 설정 (시드+비중)
+  // ══════════════════════════════════
+  function getConfig() {
+    return JSON.parse(localStorage.getItem('invest_config') || JSON.stringify({
+      totalSeed: 0,
+      ratios: { tcc: 10, scycle: 5, vr: 6, moomae: 9 }
+    }));
+  }
+
+  function calcAllocations() {
+    const cfg = getConfig();
+    const r = cfg.ratios;
+    const sum = r.tcc + r.scycle + r.vr + r.moomae;
+    const total = cfg.totalSeed;
+    if (sum === 0 || total === 0) return { tcc: 0, scycle: 0, vr: 0, moomae: 0, total, r, sum };
+    return {
+      tcc:    total * r.tcc    / sum,
+      scycle: total * r.scycle / sum,
+      vr:     total * r.vr     / sum,
+      moomae: total * r.moomae / sum,
+      total, r, sum
+    };
+  }
+
+  function saveConfigForm() {
+    const totalSeed = parseFloat(document.getElementById('cfg-total-seed').value) || 0;
+    const ratios = {
+      tcc:    parseFloat(document.getElementById('cfg-ratio-tcc').value)    || 0,
+      scycle: parseFloat(document.getElementById('cfg-ratio-scycle').value) || 0,
+      vr:     parseFloat(document.getElementById('cfg-ratio-vr').value)     || 0,
+      moomae: parseFloat(document.getElementById('cfg-ratio-moomae').value) || 0,
+    };
+    localStorage.setItem('invest_config', JSON.stringify({ totalSeed, ratios }));
+    const sheetsUrl = document.getElementById('cfg-apps-script-url').value.trim();
+    if (sheetsUrl) localStorage.setItem('sheets_url', sheetsUrl);
+    const gistId = document.getElementById('cfg-gist-id').value.trim();
+    const gistToken = document.getElementById('cfg-gist-token').value.trim();
+    if (gistId) localStorage.setItem('gist_id', gistId);
+    if (gistToken) localStorage.setItem('gist_token', gistToken);
+    const vrGistIdInput = document.getElementById('cfg-vr-gist-id').value.trim();
+    const mumaeGistIdInput = document.getElementById('cfg-mumae-gist-id').value.trim();
+    if (vrGistIdInput) localStorage.setItem('vr_gist_id', vrGistIdInput);
+    if (mumaeGistIdInput) localStorage.setItem('mumae_gist_id', mumaeGistIdInput);
+    renderOverviewConfig();
+  }
+
+  function renderOverviewConfig() {
+    const alloc = calcAllocations();
+    const cfg   = getConfig();
+    const fmt$  = v => '$' + v.toLocaleString('en-US', { maximumFractionDigits: 0 });
+    const fmtPct = v => alloc.sum > 0 ? (v / alloc.sum * 100).toFixed(0) + '%' : '--';
+
+    // 설정 폼 값 반영
+    document.getElementById('cfg-total-seed').value    = cfg.totalSeed || '';
+    document.getElementById('cfg-ratio-tcc').value     = cfg.ratios.tcc;
+    document.getElementById('cfg-ratio-scycle').value  = cfg.ratios.scycle;
+    document.getElementById('cfg-ratio-vr').value      = cfg.ratios.vr;
+    document.getElementById('cfg-ratio-moomae').value  = cfg.ratios.moomae;
+
+    // 총 시드 헤더
+    document.getElementById('ov-total-seed').textContent = alloc.total > 0 ? fmt$(alloc.total) : '--';
+
+    // 각 카드 할당 시드
+    document.getElementById('ov-tcc-alloc').textContent    = alloc.tcc    > 0 ? fmt$(alloc.tcc)    + ' (' + fmtPct(cfg.ratios.tcc)    + ')' : '--';
+    document.getElementById('ov-sc-alloc').textContent     = alloc.scycle > 0 ? fmt$(alloc.scycle) + ' (' + fmtPct(cfg.ratios.scycle) + ')' : '--';
+    document.getElementById('ov-moomae-alloc').textContent = alloc.moomae > 0 ? fmt$(alloc.moomae) + ' (' + fmtPct(cfg.ratios.moomae) + ')' : '--';
+    document.getElementById('ov-vr-alloc').textContent     = alloc.vr     > 0 ? fmt$(alloc.vr)     + ' (' + fmtPct(cfg.ratios.vr)     + ')' : '--';
+
+    // 각 탭 할당 시드
+    document.getElementById('tcc-alloc-seed').textContent = alloc.tcc    > 0 ? fmt$(alloc.tcc)    : '--';
+    document.getElementById('sc-alloc-seed').textContent  = alloc.scycle > 0 ? fmt$(alloc.scycle) : '--';
+
+    // TCC 달성률
+    const tqqq     = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+    const tcPos    = calcPosition(JSON.parse(localStorage.getItem('tcc_tcore')  || '[]'));
+    const tsPos    = calcPosition(JSON.parse(localStorage.getItem('tcc_tcycle') || '[]'));
+    const tccEval  = (tcPos.currentShares + tsPos.currentShares) * tqqq;
+    const tccCashA = parseFloat(localStorage.getItem('tcc_cash') || '0');
+    const tccTotal = tccEval + tccCashA;
+    const tccAchEl = document.getElementById('ov-tcc-achieve');
+    if (alloc.tcc > 0 && tccTotal > 0) {
+      const rate = tccTotal / alloc.tcc * 100;
+      tccAchEl.textContent = rate.toFixed(0) + '%';
+      tccAchEl.className   = 'text-[#94a3b8] ' + (rate >= 100 ? 'text-green-400' : '');
+    } else { tccAchEl.textContent = '--'; }
+
+    // S사이클 달성률
+    const soxl    = parseFloat(localStorage.getItem('sc_soxl_price') || '0');
+    const scPos   = calcPosition(JSON.parse(localStorage.getItem('sc_history') || '[]'));
+    const scEval  = scPos.currentShares * soxl;
+    const scCashA = parseFloat(localStorage.getItem('sc_cash') || '0');
+    const scTotal = scEval + scCashA;
+    const scAchEl = document.getElementById('ov-sc-achieve');
+    if (alloc.scycle > 0 && scTotal > 0) {
+      scAchEl.textContent = (scTotal / alloc.scycle * 100).toFixed(0) + '%';
+    } else { scAchEl.textContent = '--'; }
+  }
+
+  // ══════════════════════════════════
+  // 국장
+  // ══════════════════════════════════
+  function getKstockHistory() { return JSON.parse(localStorage.getItem('kstock_history') || '[]'); }
+  function saveKstockHistory(h) { localStorage.setItem('kstock_history', JSON.stringify(h)); }
+
+  function renderKstockTab() {
+    const seed = parseFloat(localStorage.getItem('kstock_seed') || '0');
+    const history = getKstockHistory();
+    const fmtW   = v => '₩' + Math.round(v).toLocaleString('ko-KR');
+    const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+    const pctCls = v => 'text-[15px] font-bold ' + (v > 0 ? 'text-green-400' : v < 0 ? 'text-red-400' : 'text-[#f1f5f9]');
+
+    // 시드 표시
+    document.getElementById('kstock-seed-display').textContent = seed > 0 ? fmtW(seed) : '--';
+    const seedInput = document.getElementById('kstock-seed-input');
+    if (seedInput && !seedInput.matches(':focus')) seedInput.value = seed > 0 ? seed : '';
+
+    // 최근 기록
+    const sorted = [...history].sort((a, b) => b.date.localeCompare(a.date));
+    const latest = sorted[0];
+    if (latest) {
+      const total = latest.eval + latest.cash;
+      document.getElementById('kstock-last-date').textContent = latest.date;
+      document.getElementById('kstock-eval').textContent  = fmtW(latest.eval);
+      document.getElementById('kstock-cash').textContent  = fmtW(latest.cash);
+      document.getElementById('kstock-total').textContent = fmtW(total);
+      if (seed > 0) {
+        const pnl = (total / seed - 1) * 100;
+        const el = document.getElementById('kstock-pnl');
+        el.textContent = fmtPct(pnl);
+        el.className   = pctCls(pnl);
+      }
+      // 전략현황 카드
+      document.getElementById('ov-kstock-date').textContent  = latest.date;
+      document.getElementById('ov-kstock-total').textContent = fmtW(total);
+      document.getElementById('ov-kstock-eval').textContent  = fmtW(latest.eval);
+      document.getElementById('ov-kstock-cash').textContent  = fmtW(latest.cash);
+      document.getElementById('ov-kstock-seed').textContent  = seed > 0 ? fmtW(seed) : '--';
+      if (seed > 0) {
+        const pnl = (total / seed - 1) * 100;
+        const el  = document.getElementById('ov-kstock-pnl');
+        el.textContent = fmtPct(pnl);
+        el.className   = 'text-[15px] font-bold ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+      }
+    }
+
+    // 누적 기록 테이블
+    const tableEl = document.getElementById('kstock-history-table');
+    tableEl.innerHTML = sorted.length ? sorted.map(r => {
+      const tot = r.eval + r.cash;
+      return `
+        <div class="flex items-center gap-2 text-xs bg-[#0f172a] rounded-lg px-3 py-2 mb-1.5">
+          <span class="text-[#94a3b8] w-16 flex-shrink-0">${r.date.slice(5)}</span>
+          <span class="flex-1 text-[#94a3b8]">평가 ${fmtW(r.eval)}</span>
+          <span class="flex-1 text-[#94a3b8]">예수 ${fmtW(r.cash)}</span>
+          <span class="font-medium">${fmtW(tot)}</span>
+          <button onclick="deleteKstockRecord(${r.id})" class="text-[#475569] hover:text-red-400 text-[11px] ml-1 flex-shrink-0">✕</button>
+        </div>`;
+    }).join('') : '<p class="text-[10px] text-[#64748b] text-center py-3">기록 없음</p>';
+  }
+
+  function addKstockRecord() {
+    const date  = document.getElementById('kstock-form-date').value;
+    const eval_ = parseFloat(document.getElementById('kstock-form-eval').value) || 0;
+    const cash  = parseFloat(document.getElementById('kstock-form-cash').value) || 0;
+    if (!date) { alert('날짜를 입력해주세요.'); return; }
+    const history = getKstockHistory();
+    history.push({ id: Date.now(), date, eval: eval_, cash });
+    saveKstockHistory(history);
+    document.getElementById('kstock-form-eval').value = '';
+    document.getElementById('kstock-form-cash').value = '';
+    renderKstockTab();
+  }
+
+  function deleteKstockRecord(id) {
+    if (!confirm('이 기록을 삭제할까요?')) return;
+    saveKstockHistory(getKstockHistory().filter(r => r.id !== id));
+    renderKstockTab();
+  }
+
+  function saveKstockSeed() {
+    const val = parseFloat(document.getElementById('kstock-seed-input').value) || 0;
+    localStorage.setItem('kstock_seed', val.toString());
+    renderKstockTab();
+  }
+
+  // ══════════════════════════════════
+  // Gist 연동 (알람 상태)
+  // ══════════════════════════════════
+  const VR_GIST_ID_DEFAULT    = 'a7f3ce217b1003560ac4a3ac66772fff';
+  const MUMAE_GIST_ID_DEFAULT = '41596c39240f37d3d196d42b00316d87';
+
+  let vrGistData    = null;
+  let mumaeGistData = null;
+
+  function getGistConfig() {
+    return {
+      id:       localStorage.getItem('gist_id')       || '',
+      token:    localStorage.getItem('gist_token')    || '',
+      vrId:     localStorage.getItem('vr_gist_id')    || VR_GIST_ID_DEFAULT,
+      mumaeId:  localStorage.getItem('mumae_gist_id') || MUMAE_GIST_ID_DEFAULT
+    };
+  }
+
+  async function fetchVrGist() {
+    const { token, vrId } = getGistConfig();
+    if (!token || !vrId) return;
+    try {
+      const res = await fetch(`https://api.github.com/gists/${vrId}`, {
+        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const gist = await res.json();
+      const content = gist.files?.['vr_data.json']?.content;
+      if (!content) throw new Error('vr_data.json 없음');
+      vrGistData = JSON.parse(content);
+      renderVrCard(vrGistData);
+    } catch (err) {
+      document.getElementById('ov-vr-status').textContent = '로드 실패';
+    }
+  }
+
+  function renderVrCard(d) {
+    const shares = parseFloat(d.vr_shares) || 0;
+    const pool   = parseFloat(d.vr_pool)   || 0;
+    const tqqq   = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+    const fmt$   = v => '$' + Math.round(v).toLocaleString('en-US');
+
+    let v2 = 0, vlow = 0, vhigh = 0;
+    try {
+      const trades = JSON.parse(d.vr_trades || '[]');
+      if (trades.length > 0) {
+        const last = trades[trades.length - 1];
+        v2    = last.v2snap    || 0;
+        vlow  = last.vlowSnap  || v2 * 0.85;
+        vhigh = last.vhighSnap || v2 * 1.15;
+      }
+    } catch (_) {}
+    if (v2 === 0) {
+      const v1 = parseFloat(d.vr_v1) || 0;
+      const g  = parseFloat(d.vr_g)  || 10;
+      v2    = v1 + pool / g;
+      vlow  = v2 * 0.85;
+      vhigh = v2 * 1.15;
+    }
+
+    const evalVal = shares * tqqq;
+    const total   = evalVal + pool;
+
+    document.getElementById('ov-vr-pool').textContent  = fmt$(pool);
+    document.getElementById('ov-vr-shares').textContent = shares + '주';
+    document.getElementById('ov-vr-v2').textContent    = fmt$(v2);
+    document.getElementById('ov-vr-vlow').textContent  = fmt$(vlow);
+    document.getElementById('ov-vr-vhigh').textContent = fmt$(vhigh);
+
+    if (tqqq > 0) {
+      document.getElementById('ov-vr-eval').textContent  = fmt$(evalVal);
+      document.getElementById('ov-vr-total').textContent = fmt$(total);
+      const statusEl = document.getElementById('ov-vr-status');
+      if (v2 > 0) {
+        if (evalVal < vlow)       { statusEl.textContent = '매수구간'; statusEl.className = 'text-xs ml-2 font-medium text-blue-400'; }
+        else if (evalVal > vhigh) { statusEl.textContent = '매도구간'; statusEl.className = 'text-xs ml-2 font-medium text-orange-400'; }
+        else                      { statusEl.textContent = '밴드 내';  statusEl.className = 'text-xs ml-2 font-medium text-green-400'; }
+      }
+      const alloc = calcAllocations();
+      if (alloc.vr > 0) {
+        document.getElementById('ov-vr-achieve').textContent = (total / alloc.vr * 100).toFixed(0) + '%';
+        const pnl   = (total / alloc.vr - 1) * 100;
+        const pnlEl = document.getElementById('ov-vr-pnl');
+        pnlEl.textContent = (pnl >= 0 ? '+' : '') + pnl.toFixed(1) + '%';
+        pnlEl.className   = 'font-medium ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+      }
+    } else {
+      document.getElementById('ov-vr-eval').textContent  = '--';
+      document.getElementById('ov-vr-total').textContent = '--';
+    }
+  }
+
+  async function fetchMumaeGist() {
+    const { token, mumaeId } = getGistConfig();
+    if (!token || !mumaeId) return;
+    try {
+      const res = await fetch(`https://api.github.com/gists/${mumaeId}`, {
+        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const gist = await res.json();
+      const content = gist.files?.['mumae_data.json']?.content;
+      if (!content) throw new Error('mumae_data.json 없음');
+      mumaeGistData = JSON.parse(content);
+      renderMumaeCard(mumaeGistData);
+    } catch (err) {
+      document.getElementById('ov-moomae-list').innerHTML =
+        `<p class="text-[10px] text-red-400 text-center py-2">로드 실패: ${err.message}</p>`;
+    }
+  }
+
+  function renderMumaeCard(d) {
+    const tqqq    = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+    const active  = (d.portfolios || []).filter(p => !p.ended);
+    const fmt$    = v => '$' + Math.round(v).toLocaleString('en-US');
+    const fmtPct  = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+    const listEl  = document.getElementById('ov-moomae-list');
+
+    if (!active.length) {
+      listEl.innerHTML = '<p class="text-[10px] text-[#64748b] text-center py-2">활성 포트폴리오 없음</p>';
+      return;
+    }
+
+    let totalEval = 0;
+    listEl.innerHTML = active.map(p => {
+      const evalVal = p.hold_qty * tqqq;
+      totalEval += evalVal;
+      const pnl = (p.avg_price > 0 && tqqq > 0) ? (tqqq / p.avg_price - 1) * 100 : null;
+      const pnlClass = pnl !== null ? (pnl >= 0 ? 'text-green-400' : 'text-red-400') : 'text-[#94a3b8]';
+      const pnlStr   = pnl !== null ? fmtPct(pnl) : '--';
+      const avgStr   = p.avg_price > 0 ? '$' + Number(p.avg_price).toFixed(2) : '--';
+      return `<div class="bg-[#0f172a] rounded-lg px-3 py-2 mb-1.5">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-medium">${p.name}</span>
+          <span class="text-[10px] ${pnlClass}">${pnlStr}</span>
+        </div>
+        <div class="flex justify-between text-[10px]">
+          <span class="text-[#64748b]">${p.hold_qty}주 · ${avgStr}</span>
+          <span class="text-[#94a3b8]">${tqqq > 0 ? fmt$(evalVal) : '--'}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    const totalSeed = active.reduce((s, p) => s + (p.seed || 0), 0);
+    document.getElementById('ov-moomae-eval').textContent = tqqq > 0 ? fmt$(totalEval) : '--';
+    if (totalSeed > 0 && tqqq > 0) {
+      const pnl   = (totalEval / totalSeed - 1) * 100;
+      const pnlEl = document.getElementById('ov-moomae-pnl');
+      pnlEl.textContent = (pnl >= 0 ? '+' : '') + pnl.toFixed(1) + '%';
+      pnlEl.className   = 'font-medium ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+    }
+    const alloc = calcAllocations();
+    const achEl = document.getElementById('ov-moomae-achieve');
+    if (alloc.moomae > 0 && totalEval > 0) {
+      achEl.textContent = (totalEval / alloc.moomae * 100).toFixed(0) + '%';
+      achEl.className   = 'text-[10px] font-bold ' + (totalEval >= alloc.moomae ? 'text-green-400' : 'text-[#94a3b8]');
+    } else {
+      achEl.textContent = '--';
+    }
+  }
+
+  async function fetchInvestData() {
+    const { id, token } = getGistConfig();
+    if (!id || !token) return;
+    try {
+      const res = await fetch(`https://api.github.com/gists/${id}`, {
+        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+      });
+      if (!res.ok) return;
+      const gist = await res.json();
+      const content = gist.files?.['invest_data.json']?.content;
+      if (!content) return;
+      const data = JSON.parse(content);
+      if (data.tcc_cash !== undefined) localStorage.setItem('tcc_cash', String(data.tcc_cash));
+      if (data.sc_cash  !== undefined) localStorage.setItem('sc_cash',  String(data.sc_cash));
+      renderTccTab();
+      renderScTab();
+      updateAllocAndAchieve();
+    } catch (e) { /* silent */ }
+  }
+
+  async function pushInvestData() {
+    const { id, token } = getGistConfig();
+    if (!id || !token) return;
+    const data = {
+      tcc_cash: parseFloat(localStorage.getItem('tcc_cash') || '0'),
+      sc_cash:  parseFloat(localStorage.getItem('sc_cash')  || '0')
+    };
+    try {
+      await fetch(`https://api.github.com/gists/${id}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `token ${token}`,
+          Accept: 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ files: { 'invest_data.json': { content: JSON.stringify(data) } } })
+      });
+    } catch (e) { /* silent */ }
+  }
+
+  async function fetchGistData() {
+    const { id, token } = getGistConfig();
+    if (!id || !token) return;
+    try {
+      const res = await fetch(`https://api.github.com/gists/${id}`, {
+        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const gist = await res.json();
+      const content = gist.files?.['stock_data.json']?.content;
+      if (!content) throw new Error('stock_data.json 없음');
+      renderGistStatus(JSON.parse(content));
+    } catch (err) {
+      const errHtml = `<p class="text-[10px] text-red-400 text-center py-1">로드 실패: ${err.message}</p>`;
+      document.getElementById('ov-tcc-gist').innerHTML = errHtml;
+      document.getElementById('ov-sc-gist').innerHTML = errHtml;
+    }
+  }
+
+  function renderGistStatus(data) {
+    const cycleRow = (ticker, key, label) => {
+      const c = data[ticker]?.[key] || {};
+      const st = c.Status || 'READY';
+      const ath = c.Target_ATH || 0;
+      const stColor = st === 'ACTIVE' ? 'text-green-400' : st === 'PAUSED' ? 'text-yellow-400' : 'text-[#475569]';
+      const bgColor = st === 'ACTIVE' ? 'bg-green-900/20' : st === 'PAUSED' ? 'bg-yellow-900/20' : 'bg-[#0f172a]';
+      const athStr = (st === 'ACTIVE' && ath > 0) ? ` · ATH $${Number(ath).toFixed(1)}` : '';
+      return `<div class="flex items-center justify-between text-[10px] rounded px-2 py-1.5 mb-1 ${bgColor}">
+        <span class="text-[#94a3b8]">${label}</span>
+        <span class="font-medium ${stColor}">${st}${athStr}</span>
+      </div>`;
+    };
+    document.getElementById('ov-tcc-gist').innerHTML =
+      cycleRow('QQQ', 'New', 'New사이클') + cycleRow('QQQ', 'Old', 'Old사이클');
+    document.getElementById('ov-sc-gist').innerHTML =
+      cycleRow('SOXX', 'New', 'New사이클') + cycleRow('SOXX', 'Old', 'Old사이클');
+  }
+
+  // ══════════════════════════════════
+  // Google Sheets 연동
+  // ══════════════════════════════════
+  const APPS_SCRIPT_CODE = `// Google Sheets Apps Script 코드
+// 스프레드시트 > 도구 > Apps Script > 아래 코드 전체 붙여넣기 > 저장
+// 배포 > 새 배포 > 유형: 웹앱 > 실행: 나(Me) > 액세스: 모든 사용자(Anyone) > 배포
+// 배포 후 URL을 대시보드 설정의 Apps Script URL에 붙여넣기
+
+const SHEET_NAMES = ['TCC', 'S사이클', '퇴직연금', '국장단타', 'VR', '무매'];
+const HEADERS = ['날짜', '시드', '평가금', '예수금', '합계', '수익률'];
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    for (const [name, row] of Object.entries(data)) {
+      let sheet = ss.getSheetByName(name);
+      if (!sheet) {
+        sheet = ss.insertSheet(name);
+        sheet.appendRow(HEADERS);
+        sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
+      }
+      sheet.appendRow(row);
+    }
+    return ContentService.createTextOutput(JSON.stringify({ ok: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const result = {};
+    for (const name of SHEET_NAMES) {
+      const sheet = ss.getSheetByName(name);
+      if (sheet && sheet.getLastRow() > 1) {
+        const last = sheet.getLastRow();
+        const startRow = Math.max(2, last - 4);
+        const numRows = last - startRow + 1;
+        result[name] = sheet.getRange(startRow, 1, numRows, 6).getValues();
+      }
+    }
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, data: result }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
+  function getSheetsUrl() {
+    return localStorage.getItem('sheets_url') || '';
+  }
+
+  async function copyAppsScriptCode() {
+    try {
+      await navigator.clipboard.writeText(APPS_SCRIPT_CODE);
+      alert('✅ 복사 완료!\n\n다음 순서로 배포하세요:\n1. Google Sheets > 도구 > Apps Script\n2. 코드 붙여넣기 > 저장\n3. 배포 > 새 배포 > 웹앱\n4. 실행: 나 / 액세스: 모든 사용자\n5. 배포 후 URL을 설정에 입력');
+    } catch (_) {
+      prompt('코드를 복사하세요 (Ctrl+A → Ctrl+C):', APPS_SCRIPT_CODE);
+    }
+  }
+
+  function showSheetsUpload() {
+    const url = getSheetsUrl();
+    if (!url) {
+      alert('설정에서 Apps Script URL을 먼저 입력하고 저장해주세요.');
+      const sec = document.getElementById('cfg-section');
+      if (sec.classList.contains('hidden')) toggleSection('cfg-section', 'cfg-arrow');
+      return;
+    }
+    const uploadSec = document.getElementById('sheets-upload-section');
+    const isHidden = uploadSec.classList.contains('hidden');
+    if (isHidden) {
+      document.getElementById('sheets-upload-date').value = new Date().toISOString().slice(0, 10);
+      // 국장 최근 기록 자동 채우기
+      const kLatest = [...getKstockHistory()].sort((a, b) => b.date.localeCompare(a.date))[0];
+      if (kLatest) {
+        document.getElementById('sheets-seed-kstock').value = localStorage.getItem('kstock_seed') || '';
+        document.getElementById('sheets-eval-kstock').value = kLatest.eval || '';
+        document.getElementById('sheets-cash-kstock').value = kLatest.cash || '';
+      }
+      updateSheetsPreview();
+      uploadSec.classList.remove('hidden');
+      document.getElementById('sheets-load-section').classList.add('hidden');
+    } else {
+      uploadSec.classList.add('hidden');
+    }
+  }
+
+  function updateSheetsPreview() {
+    const alloc = calcAllocations();
+    const tqqq = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+    const soxl = parseFloat(localStorage.getItem('sc_soxl_price') || '0');
+    const tcPos = calcPosition(JSON.parse(localStorage.getItem('tcc_tcore') || '[]'));
+    const tsPos = calcPosition(JSON.parse(localStorage.getItem('tcc_tcycle') || '[]'));
+    const tccEval = (tcPos.currentShares + tsPos.currentShares) * tqqq;
+    const scPos = calcPosition(JSON.parse(localStorage.getItem('sc_history') || '[]'));
+    const scEval = scPos.currentShares * soxl;
+    const pensionEval = getPensionHoldings().reduce((s, h) => s + h.shares * (getPensionPrices()[h.ticker] || 0), 0);
+    const pensionSeed = getPensionSeeds().reduce((s, r) => s + r.amount, 0);
+
+    const fmt$ = v => v > 0 ? '$' + Math.round(v).toLocaleString() : '--';
+    const fmtW = v => v > 0 ? '₩' + Math.round(v).toLocaleString() : '--';
+
+    const rows = [
+      { name: 'TCC',    seed: fmt$(alloc.tcc),    eval: fmt$(tccEval),    note: 'TQQQ' },
+      { name: 'S사이클', seed: fmt$(alloc.scycle), eval: fmt$(scEval),     note: 'SOXL' },
+      { name: '퇴직연금', seed: fmtW(pensionSeed), eval: fmtW(pensionEval), note: 'KRW' },
+    ];
+
+    document.getElementById('sheets-preview').innerHTML = rows.map(r => `
+      <div class="flex items-center justify-between text-[10px] bg-[#1e293b] rounded-lg px-3 py-2">
+        <span class="text-[#94a3b8] w-14 flex-shrink-0">${r.name}</span>
+        <span class="text-[#64748b]">시드 ${r.seed}</span>
+        <span class="text-white">평가금 ${r.eval}</span>
+      </div>
+    `).join('');
+  }
+
+  async function uploadToSheets() {
+    const url = getSheetsUrl();
+    if (!url) { alert('Apps Script URL이 설정되지 않았습니다.'); return; }
+    const date = document.getElementById('sheets-upload-date').value;
+    if (!date) { alert('날짜를 입력해주세요.'); return; }
+
+    const statusEl = document.getElementById('sheets-upload-status');
+    statusEl.textContent = '전송 중...';
+    statusEl.className = 'text-xs text-center mb-2 py-1 rounded-lg text-[#94a3b8] bg-[#1e293b]';
+    statusEl.classList.remove('hidden');
+
+    const alloc = calcAllocations();
+    const tqqq = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+    const soxl = parseFloat(localStorage.getItem('sc_soxl_price') || '0');
+    const tcPos = calcPosition(JSON.parse(localStorage.getItem('tcc_tcore') || '[]'));
+    const tsPos = calcPosition(JSON.parse(localStorage.getItem('tcc_tcycle') || '[]'));
+    const tccEval = (tcPos.currentShares + tsPos.currentShares) * tqqq;
+    const scPos = calcPosition(JSON.parse(localStorage.getItem('sc_history') || '[]'));
+    const scEval = scPos.currentShares * soxl;
+    const pensionEval = getPensionHoldings().reduce((s, h) => s + h.shares * (getPensionPrices()[h.ticker] || 0), 0);
+    const pensionSeed = getPensionSeeds().reduce((s, r) => s + r.amount, 0);
+
+    const cashTcc     = parseFloat(document.getElementById('sheets-cash-tcc').value)     || 0;
+    const cashSc      = parseFloat(document.getElementById('sheets-cash-sc').value)      || 0;
+    const totalVr     = parseFloat(document.getElementById('sheets-total-vr').value)     || 0;
+    const totalMoomae = parseFloat(document.getElementById('sheets-total-moomae').value) || 0;
+    const cashPension = parseFloat(document.getElementById('sheets-cash-pension').value) || 0;
+    const seedKstock  = parseFloat(document.getElementById('sheets-seed-kstock').value)  || 0;
+    const evalKstock  = parseFloat(document.getElementById('sheets-eval-kstock').value)  || 0;
+    const cashKstock  = parseFloat(document.getElementById('sheets-cash-kstock').value)  || 0;
+
+    const tccCost = tcPos.costBasis + tsPos.costBasis;
+    const tccRate = tccCost > 0 ? ((tccEval / tccCost - 1) * 100).toFixed(2) + '%' : '';
+    const scRate  = scPos.costBasis > 0 ? ((scEval / scPos.costBasis - 1) * 100).toFixed(2) + '%' : '';
+    const pensionRate = pensionSeed > 0 ? ((pensionEval / pensionSeed - 1) * 100).toFixed(2) + '%' : '';
+
+    const payload = {
+      'TCC':      [date, alloc.tcc    || 0, Math.round(tccEval),     cashTcc,     Math.round(tccEval + cashTcc),         tccRate],
+      'S사이클':  [date, alloc.scycle || 0, Math.round(scEval),      cashSc,      Math.round(scEval + cashSc),           scRate],
+      'VR':       [date, alloc.vr     || 0, '',                       '',          totalVr,                               ''],
+      '무매':     [date, alloc.moomae || 0, '',                       '',          totalMoomae,                           ''],
+      '퇴직연금': [date, pensionSeed  || 0, Math.round(pensionEval), cashPension, Math.round(pensionEval + cashPension), pensionRate],
+      '국장단타': [date, seedKstock   || 0, evalKstock,              cashKstock,  evalKstock + cashKstock,               ''],
+    };
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload),
+        redirect: 'follow'
+      });
+      const result = await res.json();
+      if (result.ok) {
+        const now = new Date().toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        localStorage.setItem('sheets_last_sync', now);
+        document.getElementById('sheets-last-sync').textContent = now + ' 동기화';
+        statusEl.textContent = '✅ 저장 완료!';
+        statusEl.className = 'text-xs text-center mb-2 py-1 rounded-lg text-green-400 bg-[#0a1120]';
+        setTimeout(() => {
+          document.getElementById('sheets-upload-section').classList.add('hidden');
+        }, 2000);
+      } else {
+        throw new Error(result.error || '서버 오류');
+      }
+    } catch (err) {
+      statusEl.textContent = '❌ 실패: ' + err.message;
+      statusEl.className = 'text-xs text-center mb-2 py-1 rounded-lg text-red-400 bg-[#0a1120]';
+    }
+  }
+
+  async function loadFromSheets() {
+    const url = getSheetsUrl();
+    if (!url) { alert('설정에서 Apps Script URL을 먼저 입력하고 저장해주세요.'); return; }
+
+    const loadSec = document.getElementById('sheets-load-section');
+    const tableEl = document.getElementById('sheets-load-table');
+    tableEl.innerHTML = '<p class="text-[10px] text-[#64748b] text-center py-2">불러오는 중...</p>';
+    loadSec.classList.remove('hidden');
+    document.getElementById('sheets-upload-section').classList.add('hidden');
+
+    try {
+      const res = await fetch(url + '?action=get', { redirect: 'follow' });
+      const result = await res.json();
+      if (!result.ok || !result.data) throw new Error('응답 오류');
+
+      const data = result.data;
+      const names = ['TCC', 'S사이클', '퇴직연금', '국장단타', 'VR', '무매'];
+      let html = '';
+      for (const name of names) {
+        if (!data[name] || !data[name].length) continue;
+        const last = data[name][data[name].length - 1];
+        const [d, seed, ev, cash, total, rate] = last;
+        const rateStr = String(rate || '');
+        const rateClass = rateStr.startsWith('-') ? 'text-red-400' : rateStr ? 'text-green-400' : 'text-[#94a3b8]';
+        html += `
+          <div class="bg-[#0f172a] rounded-lg px-3 py-2">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-medium text-[#94a3b8]">${name}</span>
+              <span class="text-[10px] text-[#64748b]">${d}</span>
+            </div>
+            <div class="flex justify-between text-[10px]">
+              <span class="text-[#64748b]">합계 ${total != null && total !== '' ? total.toLocaleString() : '--'}</span>
+              <span class="${rateClass}">${rateStr || '--'}</span>
+            </div>
+          </div>`;
+      }
+      tableEl.innerHTML = html || '<p class="text-[10px] text-[#64748b] text-center py-2">데이터 없음</p>';
+    } catch (err) {
+      tableEl.innerHTML = `<p class="text-[10px] text-red-400 text-center py-2">실패: ${err.message}</p>`;
+    }
+  }
+
+  // ══════════════════════════════════
+  // 초기화
+  // ══════════════════════════════════
+  (function init() {
+    // 오늘 날짜 기본값
+    const today = new Date().toISOString().slice(0, 10);
+    ['tcore-form-date', 'tcycle-form-date', 'sc-form-date', 'pension-seed-date', 'kstock-form-date'].forEach(id => {
+      document.getElementById(id).value = today;
+    });
+
+    // 캐시된 가격 표시
+    const cachedTqqq = localStorage.getItem('tcc_tqqq_price');
+    if (cachedTqqq) {
+      document.getElementById('tqqq-price').textContent = '$' + parseFloat(cachedTqqq).toFixed(2);
+      document.getElementById('tqqq-price-time').textContent = '캐시된 가격 (새로고침 권장)';
+    }
+    const cachedSoxl = localStorage.getItem('sc_soxl_price');
+    if (cachedSoxl) {
+      document.getElementById('soxl-price').textContent = '$' + parseFloat(cachedSoxl).toFixed(2);
+      document.getElementById('soxl-price-time').textContent = '캐시된 가격 (새로고침 권장)';
+    }
+
+    document.getElementById('last-updated').textContent =
+      new Date().toLocaleString('ko-KR',
+        { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준';
+
+    // Apps Script URL 복원
+    const savedSheetsUrl = localStorage.getItem('sheets_url');
+    if (savedSheetsUrl) document.getElementById('cfg-apps-script-url').value = savedSheetsUrl;
+
+    // 마지막 동기화 시각 복원
+    const lastSync = localStorage.getItem('sheets_last_sync');
+    if (lastSync) document.getElementById('sheets-last-sync').textContent = lastSync + ' 동기화';
+
+    // Gist 설정 복원 + 자동 로드
+    const savedGistId    = localStorage.getItem('gist_id');
+    const savedGistToken = localStorage.getItem('gist_token');
+    const savedVrGistId  = localStorage.getItem('vr_gist_id');
+    const savedMumaeGistId = localStorage.getItem('mumae_gist_id');
+    if (savedGistId)    document.getElementById('cfg-gist-id').value       = savedGistId;
+    if (savedGistToken) document.getElementById('cfg-gist-token').value     = savedGistToken;
+    if (savedVrGistId)    document.getElementById('cfg-vr-gist-id').value   = savedVrGistId;
+    if (savedMumaeGistId) document.getElementById('cfg-mumae-gist-id').value = savedMumaeGistId;
+    if (savedGistId && savedGistToken) { fetchGistData(); fetchInvestData(); }
+    if (savedGistToken) { fetchVrGist(); fetchMumaeGist(); }
+
+    renderTccTab();
+    renderScTab();
+    renderPensionTab();
+    renderKstockTab();
+    renderOverviewConfig();
+  })();
+  </script>
+</body>
+</html>
