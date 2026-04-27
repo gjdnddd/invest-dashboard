@@ -1156,8 +1156,9 @@
 
     const base = 'https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=1d';
     const urls = [
-      base,
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent(base)
+      'https://corsproxy.io/?' + encodeURIComponent(base),
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(base),
+      base
     ];
 
     for (const url of urls) {
@@ -1457,7 +1458,11 @@
   async function fetchPensionPrice(ticker) {
     if (!ticker) return;
     const base = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}.KS?interval=1d&range=1d`;
-    const urls = [base, 'https://api.allorigins.win/raw?url=' + encodeURIComponent(base)];
+    const urls = [
+      'https://corsproxy.io/?' + encodeURIComponent(base),
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(base),
+      base
+    ];
     for (const url of urls) {
       try {
         const res  = await fetch(url, { cache: 'no-store' });
@@ -1484,8 +1489,9 @@
 
     const base = 'https://query1.finance.yahoo.com/v8/finance/chart/SOXL?interval=1d&range=1d';
     const urls = [
-      base,
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent(base)
+      'https://corsproxy.io/?' + encodeURIComponent(base),
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(base),
+      base
     ];
 
     for (const url of urls) {
