@@ -25,9 +25,11 @@
   </div>
 
   <!-- Tab Navigation -->
-  <div class="sticky top-[57px] z-40 bg-[#1e293b] border-b border-[#334155]">
-    <div class="tab-scroll flex overflow-x-auto">
+  <div class="sticky top-[57px] z-40 bg-[#1e293b] border-b border-[#334155] flex items-stretch">
+    <button id="tab-scroll-left" onclick="scrollTabs(-120)" class="hidden flex-shrink-0 px-2 text-[#64748b] hover:text-[#94a3b8] border-r border-[#334155] active:opacity-70">‹</button>
+    <div id="tab-scroll-wrap" class="tab-scroll flex flex-1 overflow-x-auto">
       <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-blue-400 text-blue-400" data-tab="overview">전략현황</button>
+      <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="alarm">알람</button>
       <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="tcc">TCC</button>
       <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="scycle">S사이클</button>
       <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="pension">퇴직연금</button>
@@ -35,6 +37,7 @@
       <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="moomae">무매</button>
       <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="vr">VR</button>
     </div>
+    <button id="tab-scroll-right" onclick="scrollTabs(120)" class="flex-shrink-0 px-2 text-[#64748b] hover:text-[#94a3b8] border-l border-[#334155] active:opacity-70">›</button>
   </div>
 
   <!-- Tab Contents -->
@@ -87,6 +90,27 @@
           </div>
           <button onclick="saveConfigForm()" class="w-full bg-blue-600 text-white text-xs py-2 rounded-lg font-medium active:opacity-70">저장</button>
           <div class="mt-3 border-t border-[#334155] pt-3">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-[10px] text-[#94a3b8] font-medium">연초 리밸런싱</p>
+              <button id="rebalance-btn" onclick="calcRebalance()"
+                class="text-[10px] bg-amber-600 text-white px-3 py-1 rounded-lg active:opacity-70 disabled:opacity-40 disabled:cursor-not-allowed">
+                계산
+              </button>
+            </div>
+            <p id="rebalance-hint" class="text-[10px] text-[#475569] mb-2">VR·무매 Gist 로드 후 사용 가능</p>
+            <div id="rebalance-result" class="hidden space-y-1.5">
+              <div id="rebalance-rows" class="space-y-1"></div>
+              <div class="flex justify-between text-xs font-medium pt-1 border-t border-[#334155]">
+                <span class="text-[#94a3b8]">합산</span>
+                <span id="rebalance-total" class="text-white">--</span>
+              </div>
+              <button onclick="applyRebalance()"
+                class="w-full mt-1 bg-green-700 text-white text-xs py-2 rounded-lg font-medium active:opacity-70">
+                총 시드 업데이트
+              </button>
+            </div>
+          </div>
+          <div class="mt-3 border-t border-[#334155] pt-3">
             <label class="text-[10px] text-[#64748b]">Apps Script URL</label>
             <input type="url" id="cfg-apps-script-url" placeholder="https://script.google.com/macros/s/..."
               class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-[10px] text-white outline-none focus:border-blue-500">
@@ -101,8 +125,13 @@
             </div>
             <div>
               <label class="text-[10px] text-[#64748b]">GitHub Token</label>
-              <input type="password" id="cfg-gist-token" placeholder="ghp_..."
+              <input type="password" id="cfg-gist-token" placeholder="ghp_... 또는 github_pat_..."
                 class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-[10px] text-white outline-none focus:border-blue-500">
+            </div>
+            <div class="mt-2 flex items-center gap-2">
+              <button id="gist-test-btn" onclick="testGistConnection()"
+                class="text-[10px] bg-[#334155] text-[#94a3b8] px-3 py-1.5 rounded-lg active:opacity-70">연결 테스트</button>
+              <span id="gist-test-result" class="text-[10px]"></span>
             </div>
             <div class="mt-2">
               <label class="text-[10px] text-[#64748b]">VR Gist ID</label>
@@ -134,7 +163,7 @@
               <p class="text-[15px] font-bold" id="ov-tcc-grand">--</p>
             </div>
             <div class="bg-[#0f172a] rounded-lg p-3">
-              <p class="text-[10px] text-[#64748b] mb-1">수익률</p>
+              <p class="text-[10px] text-[#64748b] mb-1">달성률</p>
               <p class="text-[15px] font-bold" id="ov-tcc-pnl">--</p>
             </div>
           </div>
@@ -177,7 +206,7 @@
               <p class="text-[15px] font-bold" id="ov-sc-grand">--</p>
             </div>
             <div class="bg-[#0f172a] rounded-lg p-3">
-              <p class="text-[10px] text-[#64748b] mb-1">수익률</p>
+              <p class="text-[10px] text-[#64748b] mb-1">달성률</p>
               <p class="text-[15px] font-bold" id="ov-sc-pnl">--</p>
             </div>
           </div>
@@ -213,7 +242,7 @@
               <p class="text-[15px] font-bold" id="ov-pension-eval">--</p>
             </div>
             <div class="bg-[#0f172a] rounded-lg p-3">
-              <p class="text-[10px] text-[#64748b] mb-1">수익률</p>
+              <p class="text-[10px] text-[#64748b] mb-1">달성률</p>
               <p class="text-[15px] font-bold" id="ov-pension-pnl">--</p>
             </div>
           </div>
@@ -243,7 +272,7 @@
               <p class="text-[15px] font-bold" id="ov-kstock-total">--</p>
             </div>
             <div class="bg-[#0f172a] rounded-lg p-3">
-              <p class="text-[10px] text-[#64748b] mb-1">수익률</p>
+              <p class="text-[10px] text-[#64748b] mb-1">달성률</p>
               <p class="text-[15px] font-bold" id="ov-kstock-pnl">--</p>
             </div>
           </div>
@@ -276,7 +305,7 @@
             <span class="text-[#94a3b8]" id="ov-moomae-eval">--</span>
           </div>
           <div class="mt-1 flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
-            <span class="text-[#64748b]">수익률 (시드 대비)</span>
+            <span class="text-[#64748b]">달성률</span>
             <span id="ov-moomae-pnl" class="font-medium text-[#94a3b8]">--</span>
           </div>
         </div>
@@ -309,7 +338,7 @@
             <span class="text-[#94a3b8]" id="ov-vr-achieve">--</span>
           </div>
           <div class="mt-1 flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
-            <span class="text-[#64748b]">수익률 (할당 대비)</span>
+            <span class="text-[#64748b]">달성률</span>
             <span id="ov-vr-pnl" class="font-medium text-[#94a3b8]">--</span>
           </div>
         </div>
@@ -406,6 +435,13 @@
     </div>
 
     <!-- ══════════════════════════════════
+         알람 탭
+    ══════════════════════════════════ -->
+    <div id="tab-alarm" class="tab-content hidden -mx-4 -mt-4">
+      <iframe src="https://gjdnddd.github.io/stock-alarm/" class="w-full border-0 block" style="height:calc(100vh - 101px)"></iframe>
+    </div>
+
+    <!-- ══════════════════════════════════
          TCC 탭
     ══════════════════════════════════ -->
     <div id="tab-tcc" class="tab-content hidden space-y-3">
@@ -417,13 +453,23 @@
       </div>
 
       <!-- TQQQ 현재가 -->
-      <div class="bg-[#1e293b] rounded-xl border border-[#334155] px-4 py-3 flex items-center justify-between">
-        <div>
-          <p class="text-[10px] text-[#64748b] mb-0.5">TQQQ 현재가</p>
-          <p class="text-xl font-bold" id="tqqq-price">--</p>
-          <p class="text-[10px] text-[#94a3b8] mt-0.5" id="tqqq-price-time">--</p>
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] px-4 py-3">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <p class="text-[10px] text-[#64748b] mb-0.5">TQQQ 현재가</p>
+            <p class="text-xl font-bold" id="tqqq-price">--</p>
+            <p class="text-[10px] text-[#94a3b8] mt-0.5" id="tqqq-price-time">--</p>
+          </div>
+          <div class="flex flex-col items-end gap-1.5">
+            <button onclick="fetchPrice()" class="text-xs bg-[#0f172a] text-[#94a3b8] px-3 py-2 rounded-lg border border-[#334155] active:opacity-70">🔄 새로고침</button>
+            <button onclick="toggleManualPrice('tqqq')" class="text-[10px] text-[#475569] active:opacity-70">✏️ 직접입력</button>
+          </div>
         </div>
-        <button onclick="fetchPrice()" class="text-xs bg-[#0f172a] text-[#94a3b8] px-3 py-2 rounded-lg border border-[#334155] active:opacity-70">🔄 새로고침</button>
+        <div id="tqqq-manual-wrap" class="hidden flex gap-2">
+          <input type="number" id="tqqq-manual-val" step="0.01" placeholder="가격 입력 (예: 55.12)"
+            class="flex-1 bg-[#0f172a] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+          <button onclick="applyManualPrice('tqqq')" class="text-xs bg-blue-700 text-white px-3 py-1.5 rounded-lg active:opacity-70">적용</button>
+        </div>
       </div>
 
       <!-- TCC 합산 -->
@@ -609,13 +655,23 @@
       </div>
 
       <!-- SOXL 현재가 -->
-      <div class="bg-[#1e293b] rounded-xl border border-[#334155] px-4 py-3 flex items-center justify-between">
-        <div>
-          <p class="text-[10px] text-[#64748b] mb-0.5">SOXL 현재가</p>
-          <p class="text-xl font-bold" id="soxl-price">--</p>
-          <p class="text-[10px] text-[#94a3b8] mt-0.5" id="soxl-price-time">--</p>
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] px-4 py-3">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <p class="text-[10px] text-[#64748b] mb-0.5">SOXL 현재가</p>
+            <p class="text-xl font-bold" id="soxl-price">--</p>
+            <p class="text-[10px] text-[#94a3b8] mt-0.5" id="soxl-price-time">--</p>
+          </div>
+          <div class="flex flex-col items-end gap-1.5">
+            <button onclick="fetchSoxlPrice()" class="text-xs bg-[#0f172a] text-[#94a3b8] px-3 py-2 rounded-lg border border-[#334155] active:opacity-70">🔄 새로고침</button>
+            <button onclick="toggleManualPrice('soxl')" class="text-[10px] text-[#475569] active:opacity-70">✏️ 직접입력</button>
+          </div>
         </div>
-        <button onclick="fetchSoxlPrice()" class="text-xs bg-[#0f172a] text-[#94a3b8] px-3 py-2 rounded-lg border border-[#334155] active:opacity-70">🔄 새로고침</button>
+        <div id="soxl-manual-wrap" class="hidden flex gap-2">
+          <input type="number" id="soxl-manual-val" step="0.01" placeholder="가격 입력 (예: 28.50)"
+            class="flex-1 bg-[#0f172a] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+          <button onclick="applyManualPrice('soxl')" class="text-xs bg-blue-700 text-white px-3 py-1.5 rounded-lg active:opacity-70">적용</button>
+        </div>
       </div>
 
       <!-- S사이클 현황 -->
@@ -919,6 +975,10 @@
     });
   });
 
+  const _tabWrap = document.getElementById('tab-scroll-wrap');
+  _tabWrap.addEventListener('scroll', updateTabArrows);
+  updateTabArrows();
+
   // ══════════════════════════════════
   // 전략현황 탭 아코디언
   // ══════════════════════════════════
@@ -1160,38 +1220,110 @@
   }
 
   // ══════════════════════════════════
+  // ══════════════════════════════════
+  // 가격 fetch 공통 헬퍼
+  // 순서: Stooq(프록시3개) → Yahoo(프록시3개) → Yahoo 직접
+  // ══════════════════════════════════
+  async function fetchQuote(symbol, type = 'us') {
+    const stooqSym  = type === 'kr' ? symbol.toLowerCase() + '.ko' : symbol.toLowerCase() + '.us';
+    const yahooSym  = type === 'kr' ? symbol + '.KS' : symbol;
+    const stooqBase = `https://stooq.com/q/l/?s=${stooqSym}&f=sd2t2ohlcv&e=csv`;
+    const yahooBase = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSym}?interval=1d&range=1d`;
+
+    const proxies = [
+      'https://corsproxy.io/?',
+      'https://api.allorigins.win/raw?url=',
+      'https://api.codetabs.com/v1/proxy?quest=',
+    ];
+
+    // Stooq 시도 (CSV: Symbol,Date,Time,Open,High,Low,Close,Volume)
+    for (const px of proxies) {
+      try {
+        const res  = await fetch(px + encodeURIComponent(stooqBase), { cache: 'no-store' });
+        const text = await res.text();
+        for (const line of text.trim().split('\n')) {
+          if (/symbol|date/i.test(line)) continue;
+          const cols = line.split(',');
+          if (cols.length >= 7) {
+            const p = parseFloat(cols[6]);
+            if (p > 0 && !isNaN(p)) return p;
+          }
+        }
+      } catch (_) { continue; }
+    }
+
+    // Yahoo Finance 시도
+    for (const px of proxies) {
+      try {
+        const res  = await fetch(px + encodeURIComponent(yahooBase), { cache: 'no-store' });
+        const data = await res.json();
+        const p    = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+        if (p > 0) return p;
+      } catch (_) { continue; }
+    }
+
+    // Yahoo 직접 (로컬 개발환경 폴백)
+    try {
+      const res  = await fetch(yahooBase, { cache: 'no-store' });
+      const data = await res.json();
+      const p    = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+      if (p > 0) return p;
+    } catch (_) {}
+
+    return null;
+  }
+
+  // ══════════════════════════════════
   // TQQQ 현재가 fetch
   // ══════════════════════════════════
   async function fetchPrice() {
     const priceEl = document.getElementById('tqqq-price');
-    const timeEl = document.getElementById('tqqq-price-time');
+    const timeEl  = document.getElementById('tqqq-price-time');
     priceEl.textContent = '로딩 중...';
 
-    const base = 'https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=1d';
-    const urls = [
-      'https://corsproxy.io/?' + encodeURIComponent(base),
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent(base),
-      base
-    ];
-
-    for (const url of urls) {
-      try {
-        const res = await fetch(url, { cache: 'no-store' });
-        const data = await res.json();
-        const p = data.chart.result[0].meta.regularMarketPrice;
-        localStorage.setItem('tcc_tqqq_price', p);
-        priceEl.textContent = '$' + p.toFixed(2);
-        timeEl.textContent = new Date().toLocaleString('ko-KR',
-          { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준';
-        renderTccTab();
-        if (vrGistData)    renderVrCard(vrGistData);
-        if (mumaeGistData) renderMumaeCard(mumaeGistData);
-        return;
-      } catch (_) { continue; }
+    const p = await fetchQuote('TQQQ', 'us');
+    if (p !== null) {
+      localStorage.setItem('tcc_tqqq_price', p);
+      priceEl.textContent = '$' + p.toFixed(2);
+      timeEl.textContent  = new Date().toLocaleString('ko-KR',
+        { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준';
+      renderTccTab();
+      if (vrGistData)    renderVrCard(vrGistData);
+      if (mumaeGistData) renderMumaeCard(mumaeGistData);
+    } else {
+      priceEl.textContent = 'fetch 실패';
+      timeEl.textContent  = '직접입력 버튼으로 수동 입력 가능';
     }
+  }
 
-    priceEl.textContent = 'fetch 실패';
-    timeEl.textContent = '잠시 후 다시 시도해주세요';
+  function toggleManualPrice(type) {
+    const wrap = document.getElementById(type + '-manual-wrap');
+    wrap.classList.toggle('hidden');
+    if (!wrap.classList.contains('hidden')) {
+      document.getElementById(type + '-manual-val').focus();
+    }
+  }
+
+  function applyManualPrice(type) {
+    const val = parseFloat(document.getElementById(type + '-manual-val').value);
+    if (!val || val <= 0) return;
+    if (type === 'tqqq') {
+      localStorage.setItem('tcc_tqqq_price', val);
+      document.getElementById('tqqq-price').textContent = '$' + val.toFixed(2);
+      document.getElementById('tqqq-price-time').textContent = new Date().toLocaleString('ko-KR',
+        { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 수동입력';
+      renderTccTab();
+      if (vrGistData)    renderVrCard(vrGistData);
+      if (mumaeGistData) renderMumaeCard(mumaeGistData);
+    } else if (type === 'soxl') {
+      localStorage.setItem('sc_soxl_price', val);
+      document.getElementById('soxl-price').textContent = '$' + val.toFixed(2);
+      document.getElementById('soxl-price-time').textContent = new Date().toLocaleString('ko-KR',
+        { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 수동입력';
+      renderScTab();
+    }
+    document.getElementById(type + '-manual-wrap').classList.add('hidden');
+    document.getElementById(type + '-manual-val').value = '';
   }
 
   // ══════════════════════════════════
@@ -1364,7 +1496,9 @@
           <div class="grid grid-cols-2 gap-2">
             <div>
               <p class="text-[10px] text-[#64748b] mb-0.5">현재가</p>
-              <p class="text-xs font-medium">${price > 0 ? '₩' + price.toLocaleString('ko-KR') : '--'}</p>
+              <input type="number" value="${price > 0 ? price : ''}" min="0" placeholder="직접입력"
+                onchange="setPensionPriceManual('${h.ticker}', this.value)"
+                class="w-full bg-[#1e293b] border border-[#334155] rounded px-1.5 py-1 text-xs text-white outline-none focus:border-blue-500">
             </div>
             <div>
               <p class="text-[10px] text-[#64748b] mb-0.5">매수가</p>
@@ -1528,24 +1662,22 @@
 
   async function fetchPensionPrice(ticker) {
     if (!ticker) return;
-    const base = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}.KS?interval=1d&range=1d`;
-    const urls = [
-      'https://corsproxy.io/?' + encodeURIComponent(base),
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent(base),
-      base
-    ];
-    for (const url of urls) {
-      try {
-        const res  = await fetch(url, { cache: 'no-store' });
-        const data = await res.json();
-        const p    = data.chart.result[0].meta.regularMarketPrice;
-        const prices = getPensionPrices();
-        prices[ticker] = p;
-        localStorage.setItem('pension_prices', JSON.stringify(prices));
-        renderPensionTab();
-        return;
-      } catch (_) { continue; }
+    const p = await fetchQuote(ticker, 'kr');
+    if (p !== null) {
+      const prices = getPensionPrices();
+      prices[ticker] = p;
+      localStorage.setItem('pension_prices', JSON.stringify(prices));
+      renderPensionTab();
     }
+  }
+
+  function setPensionPriceManual(ticker, value) {
+    const p = parseFloat(value);
+    if (!p || p <= 0) return;
+    const prices = getPensionPrices();
+    prices[ticker] = p;
+    localStorage.setItem('pension_prices', JSON.stringify(prices));
+    renderPensionTab();
   }
 
   async function fetchAllPensionPrices() {
@@ -1555,32 +1687,20 @@
 
   async function fetchSoxlPrice() {
     const priceEl = document.getElementById('soxl-price');
-    const timeEl = document.getElementById('soxl-price-time');
+    const timeEl  = document.getElementById('soxl-price-time');
     priceEl.textContent = '로딩 중...';
 
-    const base = 'https://query1.finance.yahoo.com/v8/finance/chart/SOXL?interval=1d&range=1d';
-    const urls = [
-      'https://corsproxy.io/?' + encodeURIComponent(base),
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent(base),
-      base
-    ];
-
-    for (const url of urls) {
-      try {
-        const res = await fetch(url, { cache: 'no-store' });
-        const data = await res.json();
-        const p = data.chart.result[0].meta.regularMarketPrice;
-        localStorage.setItem('sc_soxl_price', p);
-        priceEl.textContent = '$' + p.toFixed(2);
-        timeEl.textContent = new Date().toLocaleString('ko-KR',
-          { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준';
-        renderScTab();
-        return;
-      } catch (_) { continue; }
+    const p = await fetchQuote('SOXL', 'us');
+    if (p !== null) {
+      localStorage.setItem('sc_soxl_price', p);
+      priceEl.textContent = '$' + p.toFixed(2);
+      timeEl.textContent  = new Date().toLocaleString('ko-KR',
+        { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준';
+      renderScTab();
+    } else {
+      priceEl.textContent = 'fetch 실패';
+      timeEl.textContent  = '직접입력 버튼으로 수동 입력 가능';
     }
-
-    priceEl.textContent = 'fetch 실패';
-    timeEl.textContent = '잠시 후 다시 시도해주세요';
   }
 
   // ══════════════════════════════════
@@ -1629,6 +1749,70 @@
     if (mumaeGistIdInput) localStorage.setItem('mumae_gist_id', mumaeGistIdInput);
     renderOverviewConfig();
     pushInvestData();
+  }
+
+  let _rebalanceTotal = 0;
+
+  function calcRebalance() {
+    const tqqq = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+    const soxl = parseFloat(localStorage.getItem('sc_soxl_price')  || '0');
+    const fmt$ = v => '$' + Math.round(v).toLocaleString('en-US');
+
+    if (!vrGistData || !mumaeGistData) {
+      alert('VR·무매 Gist를 먼저 로드해주세요. (전략현황 탭에서 🔄 클릭)');
+      return;
+    }
+
+    // 각 전략 현재 총액
+    const tcPos   = calcPosition(JSON.parse(localStorage.getItem('tcc_tcore')  || '[]'));
+    const tsPos   = calcPosition(JSON.parse(localStorage.getItem('tcc_tcycle') || '[]'));
+    const tccVal  = (tcPos.currentShares + tsPos.currentShares) * tqqq
+                  + parseFloat(localStorage.getItem('tcc_cash') || '0');
+
+    const scPos   = calcPosition(JSON.parse(localStorage.getItem('sc_history') || '[]'));
+    const scVal   = scPos.currentShares * soxl
+                  + parseFloat(localStorage.getItem('sc_cash') || '0');
+
+    const vrShares = parseFloat(vrGistData.vr_shares) || 0;
+    const vrPool   = parseFloat(vrGistData.vr_pool)   || 0;
+    const vrVal    = vrShares * tqqq + vrPool;
+
+    const active    = (mumaeGistData.portfolios || []).filter(p => !p.ended);
+    const mumaeVal  = active.reduce((s, p) => s + (p.hold_qty * tqqq), 0);
+
+    _rebalanceTotal = tccVal + scVal + vrVal + mumaeVal;
+
+    const alloc = calcAllocations();
+    const r     = alloc.r;
+    const sum   = alloc.sum || 1;
+    const rows  = [
+      { name: 'TCC (T코어+T사이클)',  cur: tccVal,   new: _rebalanceTotal * r.tcc    / sum },
+      { name: 'S사이클',              cur: scVal,    new: _rebalanceTotal * r.scycle / sum },
+      { name: 'VR',                   cur: vrVal,    new: _rebalanceTotal * r.vr     / sum },
+      { name: '무매',                 cur: mumaeVal, new: _rebalanceTotal * r.moomae / sum },
+    ];
+
+    document.getElementById('rebalance-rows').innerHTML = rows.map(row => `
+      <div class="flex items-center justify-between text-xs bg-[#0f172a] rounded-lg px-3 py-2">
+        <span class="text-[#94a3b8] flex-1">${row.name}</span>
+        <span class="text-[#64748b] text-[10px] mr-2">${fmt$(row.cur)}</span>
+        <span class="font-medium text-amber-400">→ ${fmt$(row.new)}</span>
+      </div>`).join('');
+    document.getElementById('rebalance-total').textContent = fmt$(_rebalanceTotal);
+    document.getElementById('rebalance-result').classList.remove('hidden');
+  }
+
+  function applyRebalance() {
+    if (!_rebalanceTotal) return;
+    const cfg = getConfig();
+    cfg.totalSeed = Math.round(_rebalanceTotal);
+    localStorage.setItem('invest_config', JSON.stringify(cfg));
+    document.getElementById('cfg-total-seed').value = cfg.totalSeed;
+    renderOverviewConfig();
+    updateAllocAndAchieve();
+    pushInvestData();
+    document.getElementById('rebalance-result').classList.add('hidden');
+    alert('✅ 총 시드가 $' + Math.round(_rebalanceTotal).toLocaleString() + '으로 업데이트됐습니다.');
   }
 
   function renderOverviewConfig() {
@@ -1767,12 +1951,56 @@
     };
   }
 
+  function showGistAuthError() {
+    const html = `<p class="text-[10px] text-red-400 text-center py-1">401 토큰 오류 · <button onclick="toggleSection('cfg-section','cfg-arrow')" class="underline">설정</button>에서 재입력</p>`;
+    ['ov-tcc-gist','ov-sc-gist'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = html;
+    });
+  }
+
+  async function testGistConnection() {
+    const btn    = document.getElementById('gist-test-btn');
+    const result = document.getElementById('gist-test-result');
+    btn.textContent = '테스트 중...';
+    result.textContent = '';
+    const { id, token } = getGistConfig();
+    if (!id || !token) {
+      result.textContent = 'ID 또는 Token이 비어있습니다';
+      result.className = 'text-[10px] text-red-400';
+      btn.textContent = '연결 테스트';
+      return;
+    }
+    try {
+      const res = await fetch(`https://api.github.com/gists/${id}`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' }
+      });
+      if (res.ok) {
+        result.textContent = '✅ 연결 성공';
+        result.className = 'text-[10px] text-green-400';
+      } else if (res.status === 401) {
+        result.textContent = '❌ 401: Token이 잘못되었거나 만료됨';
+        result.className = 'text-[10px] text-red-400';
+      } else if (res.status === 404) {
+        result.textContent = '❌ 404: Gist ID를 찾을 수 없음';
+        result.className = 'text-[10px] text-red-400';
+      } else {
+        result.textContent = `❌ HTTP ${res.status}`;
+        result.className = 'text-[10px] text-red-400';
+      }
+    } catch (e) {
+      result.textContent = '❌ 네트워크 오류';
+      result.className = 'text-[10px] text-red-400';
+    }
+    btn.textContent = '연결 테스트';
+  }
+
   async function fetchVrGist() {
     const { token, vrId } = getGistConfig();
     if (!token || !vrId) return;
     try {
       const res = await fetch(`https://api.github.com/gists/${vrId}`, {
-        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' }
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const gist = await res.json();
@@ -1780,6 +2008,7 @@
       if (!content) throw new Error('vr_data.json 없음');
       vrGistData = JSON.parse(content);
       renderVrCard(vrGistData);
+      if (vrGistData && mumaeGistData) { document.getElementById('rebalance-hint').classList.add('hidden'); }
     } catch (err) {
       document.getElementById('ov-vr-status').textContent = '로드 실패';
     }
@@ -1846,14 +2075,16 @@
     if (!token || !mumaeId) return;
     try {
       const res = await fetch(`https://api.github.com/gists/${mumaeId}`, {
-        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' }
       });
+      if (res.status === 401) { showGistAuthError(); return; }
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const gist = await res.json();
       const content = gist.files?.['mumae_data.json']?.content;
       if (!content) throw new Error('mumae_data.json 없음');
       mumaeGistData = JSON.parse(content);
       renderMumaeCard(mumaeGistData);
+      if (vrGistData && mumaeGistData) { document.getElementById('rebalance-hint').classList.add('hidden'); }
     } catch (err) {
       document.getElementById('ov-moomae-list').innerHTML =
         `<p class="text-[10px] text-red-400 text-center py-2">로드 실패: ${err.message}</p>`;
@@ -1915,8 +2146,9 @@
     if (!id || !token) return;
     try {
       const res = await fetch(`https://api.github.com/gists/${id}`, {
-        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' }
       });
+      if (res.status === 401) { showGistAuthError(); return; }
       if (!res.ok) return;
       const gist = await res.json();
       const content = gist.files?.['invest_data.json']?.content;
@@ -1957,15 +2189,16 @@
       sheets_url:       ls('sheets_url') || ''
     };
     try {
-      await fetch(`https://api.github.com/gists/${id}`, {
+      const res = await fetch(`https://api.github.com/gists/${id}`, {
         method: 'PATCH',
         headers: {
-          Authorization: `token ${token}`,
+          Authorization: `Bearer ${token}`,
           Accept: 'application/vnd.github.v3+json',
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ files: { 'invest_data.json': { content: JSON.stringify(data) } } })
       });
+      if (res.status === 401) showGistAuthError();
     } catch (e) { /* silent */ }
   }
 
@@ -1974,8 +2207,9 @@
     if (!id || !token) return;
     try {
       const res = await fetch(`https://api.github.com/gists/${id}`, {
-        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' }
       });
+      if (res.status === 401) { showGistAuthError(); return; }
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const gist = await res.json();
       const content = gist.files?.['stock_data.json']?.content;
@@ -2021,7 +2255,7 @@ const SHEET_HEADERS = {
   '퇴직연금': ['날짜','총시드','평가금','예수금','합산','합산수익률','평가금수익률'],
   '국장단타': ['날짜','시드','평가금','예수금','합계','수익률'],
   'VR':       ['날짜','할당시드','평가금','Pool','합계','수익률','V2','Vlow','Vhigh'],
-  '무매':     ['날짜','할당시드','합산평가금','수익률','달성률']
+  '무매':     ['날짜','할당시드','합산평가금','달성률','수익률(매수금대비)']
 };
 
 function doPost(e) {
@@ -2243,8 +2477,11 @@ function doGet(e) {
       mumaeTotal = active.reduce((s, p) => s + (p.hold_qty * tqqq), 0);
     }
     if (!mumaeTotal) mumaeTotal = parseFloat(document.getElementById('sheets-total-moomae').value) || 0;
-    const mumaePnl     = alloc.moomae > 0 ? fmtPct((mumaeTotal / alloc.moomae - 1) * 100) : '';
-    const mumaeAchieve = alloc.moomae > 0 ? (mumaeTotal / alloc.moomae * 100).toFixed(1) + '%' : '';
+    const mumaeAchieve  = alloc.moomae > 0 ? (mumaeTotal / alloc.moomae * 100).toFixed(1) + '%' : '';
+    const mumaeCostB    = mumaeGistData
+      ? (mumaeGistData.portfolios || []).filter(p => !p.ended).reduce((s, p) => s + (p.hold_qty * (p.avg_price || 0)), 0)
+      : 0;
+    const mumaeHoldPnl  = mumaeCostB > 0 ? fmtPct((mumaeTotal / mumaeCostB - 1) * 100) : '';
 
     const payload = {
       'TCC':      [date, alloc.tcc||0, Math.round(tcEval), tcPnl, Math.round(tsEval), Math.round(cashTcc), Math.round(tsGrand), tsPnl, Math.round(tccGrand), tccPnl, tccRatio],
@@ -2252,7 +2489,7 @@ function doGet(e) {
       '퇴직연금': [date, Math.round(pensionSeed), Math.round(pensionEval), Math.round(cashPension), Math.round(pensionGrand), pensionGrandPnl, pensionEvalPnl],
       '국장단타': [date, Math.round(seedKstock), Math.round(evalKstock), Math.round(cashKstock), Math.round(evalKstock + cashKstock), kstockPnl],
       'VR':       [date, alloc.vr||0, Math.round(vrEval), Math.round(vrPool), Math.round(vrTotal), vrPnl, Math.round(vrV2), Math.round(vrVlow), Math.round(vrVhigh)],
-      '무매':     [date, alloc.moomae||0, Math.round(mumaeTotal), mumaePnl, mumaeAchieve],
+      '무매':     [date, alloc.moomae||0, Math.round(mumaeTotal), mumaeAchieve, mumaeHoldPnl],
     };
 
     try {
@@ -2321,6 +2558,22 @@ function doGet(e) {
     } catch (err) {
       tableEl.innerHTML = `<p class="text-[10px] text-red-400 text-center py-2">실패: ${err.message}</p>`;
     }
+  }
+
+  // ══════════════════════════════════
+  // 탭 스크롤 화살표
+  // ══════════════════════════════════
+  function scrollTabs(delta) {
+    const wrap = document.getElementById('tab-scroll-wrap');
+    wrap.scrollBy({ left: delta, behavior: 'smooth' });
+  }
+
+  function updateTabArrows() {
+    const wrap  = document.getElementById('tab-scroll-wrap');
+    const left  = document.getElementById('tab-scroll-left');
+    const right = document.getElementById('tab-scroll-right');
+    left.classList.toggle('hidden', wrap.scrollLeft <= 0);
+    right.classList.toggle('hidden', wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 1);
   }
 
   // ══════════════════════════════════
