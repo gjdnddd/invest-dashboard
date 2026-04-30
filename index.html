@@ -144,6 +144,12 @@
                 class="w-full mt-1 bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-[10px] text-white outline-none focus:border-blue-500">
             </div>
           </div>
+          <div class="mt-3 border-t border-[#334155] pt-3">
+            <p class="text-[10px] text-[#94a3b8] mb-1 font-medium">Finnhub API Key</p>
+            <p class="text-[10px] text-[#475569] mb-2">모바일 가격 fetch 안정화 (프록시 없이 직접 통신)</p>
+            <input type="password" id="cfg-finnhub-key" placeholder="finnhub.io에서 발급"
+              class="w-full bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-[10px] text-white outline-none focus:border-blue-500">
+          </div>
         </div>
       </div>
 
@@ -1222,13 +1228,29 @@
   // ══════════════════════════════════
   // ══════════════════════════════════
   // 가격 fetch 공통 헬퍼
-  // 순서: Stooq(프록시3개) → Yahoo(프록시3개) → Yahoo 직접
+  // 순서: Finnhub(직접) → Stooq(프록시3개) → Yahoo(프록시3개) → Yahoo 직접
   // ══════════════════════════════════
   async function fetchQuote(symbol, type = 'us') {
-    const stooqSym  = type === 'kr' ? symbol.toLowerCase() + '.ko' : symbol.toLowerCase() + '.us';
-    const yahooSym  = type === 'kr' ? symbol + '.KS' : symbol;
-    const stooqBase = `https://stooq.com/q/l/?s=${stooqSym}&f=sd2t2ohlcv&e=csv`;
-    const yahooBase = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSym}?interval=1d&range=1d`;
+    const finnhubKey = localStorage.getItem('finnhub_key') || '';
+    const stooqSym   = type === 'kr' ? symbol.toLowerCase() + '.ko' : symbol.toLowerCase() + '.us';
+    const yahooSym   = type === 'kr' ? symbol + '.KS' : symbol;
+    const stooqBase  = `https://stooq.com/q/l/?s=${stooqSym}&f=sd2t2ohlcv&e=csv`;
+    const yahooBase  = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSym}?interval=1d&range=1d`;
+
+    // 1. Finnhub (프록시 없이 직접 통신 — 모바일 안정)
+    if (finnhubKey) {
+      try {
+        const finnhubSym = type === 'kr' ? `KRX:${symbol}` : symbol;
+        const res  = await fetch(
+          `https://finnhub.io/api/v1/quote?symbol=${finnhubSym}&token=${finnhubKey}`,
+          { cache: 'no-store' }
+        );
+        const data = await res.json();
+        // c: 현재가, pc: 전일 종가 (장 종료 후 c가 0이면 pc 사용)
+        const p = data.c > 0 ? data.c : data.pc;
+        if (p > 0) return p;
+      } catch (_) {}
+    }
 
     const proxies = [
       'https://corsproxy.io/?',
@@ -1236,7 +1258,7 @@
       'https://api.codetabs.com/v1/proxy?quest=',
     ];
 
-    // Stooq 시도 (CSV: Symbol,Date,Time,Open,High,Low,Close,Volume)
+    // 2. Stooq (CSV: Symbol,Date,Time,Open,High,Low,Close,Volume)
     for (const px of proxies) {
       try {
         const res  = await fetch(px + encodeURIComponent(stooqBase), { cache: 'no-store' });
@@ -1252,7 +1274,7 @@
       } catch (_) { continue; }
     }
 
-    // Yahoo Finance 시도
+    // 3. Yahoo Finance (프록시)
     for (const px of proxies) {
       try {
         const res  = await fetch(px + encodeURIComponent(yahooBase), { cache: 'no-store' });
@@ -1262,7 +1284,7 @@
       } catch (_) { continue; }
     }
 
-    // Yahoo 직접 (로컬 개발환경 폴백)
+    // 4. Yahoo 직접 (로컬 개발환경 폴백)
     try {
       const res  = await fetch(yahooBase, { cache: 'no-store' });
       const data = await res.json();
@@ -1747,6 +1769,8 @@
     const mumaeGistIdInput = document.getElementById('cfg-mumae-gist-id').value.trim();
     if (vrGistIdInput) localStorage.setItem('vr_gist_id', vrGistIdInput);
     if (mumaeGistIdInput) localStorage.setItem('mumae_gist_id', mumaeGistIdInput);
+    const finnhubKey = document.getElementById('cfg-finnhub-key').value.trim();
+    if (finnhubKey) localStorage.setItem('finnhub_key', finnhubKey);
     renderOverviewConfig();
     pushInvestData();
   }
@@ -2622,6 +2646,8 @@ function doGet(e) {
     if (savedGistToken) document.getElementById('cfg-gist-token').value     = savedGistToken;
     if (savedVrGistId)    document.getElementById('cfg-vr-gist-id').value   = savedVrGistId;
     if (savedMumaeGistId) document.getElementById('cfg-mumae-gist-id').value = savedMumaeGistId;
+    const savedFinnhubKey = localStorage.getItem('finnhub_key');
+    if (savedFinnhubKey) document.getElementById('cfg-finnhub-key').value   = savedFinnhubKey;
     if (savedGistId && savedGistToken) { fetchGistData(); fetchInvestData(); }
     fetchVrGist(); fetchMumaeGist();
 
