@@ -1228,53 +1228,38 @@
   // ══════════════════════════════════
   // ══════════════════════════════════
   // 가격 fetch 공통 헬퍼
-  // 순서: Finnhub(직접) → Stooq(프록시3개) → Yahoo(프록시3개) → Yahoo 직접
+  // 미장: Finnhub → Yahoo(프록시) → Stooq(프록시)
+  // 국장: Finnhub → 네이버 JSON API(codetabs) → Yahoo(프록시)
   // ══════════════════════════════════
   async function fetchQuote(symbol, type = 'us') {
     const finnhubKey = localStorage.getItem('finnhub_key') || '';
-    const stooqSym   = type === 'kr' ? symbol.toLowerCase() + '.ko' : symbol.toLowerCase() + '.us';
     const yahooSym   = type === 'kr' ? symbol + '.KS' : symbol;
-    const stooqBase  = `https://stooq.com/q/l/?s=${stooqSym}&f=sd2t2ohlcv&e=csv`;
     const yahooBase  = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSym}?interval=1d&range=1d`;
+    const proxies    = ['https://corsproxy.io/?', 'https://api.allorigins.win/raw?url='];
 
-    // 1. Finnhub (프록시 없이 직접 통신 — 모바일 안정)
+    // 1. Finnhub (직접 — 프록시 없이 PC·모바일 모두 안정)
     if (finnhubKey) {
       try {
-        const finnhubSym = type === 'kr' ? `KRX:${symbol}` : symbol;
-        const res  = await fetch(
-          `https://finnhub.io/api/v1/quote?symbol=${finnhubSym}&token=${finnhubKey}`,
-          { cache: 'no-store' }
-        );
+        const sym  = type === 'kr' ? `KRX:${symbol}` : symbol;
+        const res  = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${finnhubKey}`, { cache: 'no-store' });
         const data = await res.json();
-        // c: 현재가, pc: 전일 종가 (장 종료 후 c가 0이면 pc 사용)
-        const p = data.c > 0 ? data.c : data.pc;
+        const p    = data.c > 0 ? data.c : data.pc;
         if (p > 0) return p;
       } catch (_) {}
     }
 
-    const proxies = [
-      'https://corsproxy.io/?',
-      'https://api.allorigins.win/raw?url=',
-      'https://api.codetabs.com/v1/proxy?quest=',
-    ];
-
-    // 2. Stooq (CSV: Symbol,Date,Time,Open,High,Low,Close,Volume)
-    for (const px of proxies) {
+    // 2. 네이버 JSON API via codetabs (국장 전용)
+    if (type === 'kr') {
       try {
-        const res  = await fetch(px + encodeURIComponent(stooqBase), { cache: 'no-store' });
-        const text = await res.text();
-        for (const line of text.trim().split('\n')) {
-          if (/symbol|date/i.test(line)) continue;
-          const cols = line.split(',');
-          if (cols.length >= 7) {
-            const p = parseFloat(cols[6]);
-            if (p > 0 && !isNaN(p)) return p;
-          }
-        }
-      } catch (_) { continue; }
+        const url  = `https://m.stock.naver.com/api/stock/${symbol}/basic`;
+        const res  = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url), { cache: 'no-store' });
+        const data = await res.json();
+        const p    = parseFloat((data.closePrice || data.currentPrice || '').replace(/,/g, ''));
+        if (p > 0) return p;
+      } catch (_) {}
     }
 
-    // 3. Yahoo Finance (프록시)
+    // 3. Yahoo Finance via 프록시
     for (const px of proxies) {
       try {
         const res  = await fetch(px + encodeURIComponent(yahooBase), { cache: 'no-store' });
@@ -1284,13 +1269,24 @@
       } catch (_) { continue; }
     }
 
-    // 4. Yahoo 직접 (로컬 개발환경 폴백)
-    try {
-      const res  = await fetch(yahooBase, { cache: 'no-store' });
-      const data = await res.json();
-      const p    = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-      if (p > 0) return p;
-    } catch (_) {}
+    // 4. Stooq via 프록시 (미장 전용)
+    if (type === 'us') {
+      const stooqBase = `https://stooq.com/q/l/?s=${symbol.toLowerCase()}.us&f=sd2t2ohlcv&e=csv`;
+      for (const px of proxies) {
+        try {
+          const res  = await fetch(px + encodeURIComponent(stooqBase), { cache: 'no-store' });
+          const text = await res.text();
+          for (const line of text.trim().split('\n')) {
+            if (/symbol|date/i.test(line)) continue;
+            const cols = line.split(',');
+            if (cols.length >= 7) {
+              const p = parseFloat(cols[6]);
+              if (p > 0 && !isNaN(p)) return p;
+            }
+          }
+        } catch (_) { continue; }
+      }
+    }
 
     return null;
   }
