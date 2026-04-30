@@ -1997,11 +1997,11 @@
 
   async function fetchVrGist() {
     const { token, vrId } = getGistConfig();
-    if (!token || !vrId) return;
+    if (!vrId) return;
+    const headers = { Accept: 'application/vnd.github.v3+json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
     try {
-      const res = await fetch(`https://api.github.com/gists/${vrId}`, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' }
-      });
+      const res = await fetch(`https://api.github.com/gists/${vrId}`, { headers });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const gist = await res.json();
       const content = gist.files?.['vr_data.json']?.content;
@@ -2010,7 +2010,10 @@
       renderVrCard(vrGistData);
       if (vrGistData && mumaeGistData) { document.getElementById('rebalance-hint').classList.add('hidden'); }
     } catch (err) {
-      document.getElementById('ov-vr-status').textContent = '로드 실패';
+      const statusEl = document.getElementById('ov-vr-status');
+      statusEl.textContent = '로드 실패';
+      statusEl.className = 'text-xs ml-2 font-medium text-red-400';
+      console.error('VR Gist 오류:', err.message);
     }
   }
 
@@ -2072,11 +2075,11 @@
 
   async function fetchMumaeGist() {
     const { token, mumaeId } = getGistConfig();
-    if (!token || !mumaeId) return;
+    if (!mumaeId) return;
+    const headers = { Accept: 'application/vnd.github.v3+json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
     try {
-      const res = await fetch(`https://api.github.com/gists/${mumaeId}`, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' }
-      });
+      const res = await fetch(`https://api.github.com/gists/${mumaeId}`, { headers });
       if (res.status === 401) { showGistAuthError(); return; }
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const gist = await res.json();
@@ -2620,7 +2623,7 @@ function doGet(e) {
     if (savedVrGistId)    document.getElementById('cfg-vr-gist-id').value   = savedVrGistId;
     if (savedMumaeGistId) document.getElementById('cfg-mumae-gist-id').value = savedMumaeGistId;
     if (savedGistId && savedGistToken) { fetchGistData(); fetchInvestData(); }
-    if (savedGistToken) { fetchVrGist(); fetchMumaeGist(); }
+    fetchVrGist(); fetchMumaeGist();
 
     renderTccTab();
     renderScTab();
