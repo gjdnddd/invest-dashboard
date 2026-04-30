@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fetch 진단</title>
+  <style>
+    body { font-family: sans-serif; background: #0f172a; color: #f1f5f9; padding: 16px; max-width: 480px; margin: 0 auto; }
+    h2 { font-size: 16px; margin-bottom: 4px; }
+    p  { font-size: 12px; color: #94a3b8; margin: 0 0 16px; }
+    input { width: 100%; box-sizing: border-box; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 8px; padding: 8px 10px; font-size: 12px; margin-bottom: 8px; }
+    button { width: 100%; background: #2563eb; color: white; border: none; border-radius: 8px; padding: 10px; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 16px; }
+    .row { background: #1e293b; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+    .label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
+    .result { font-size: 13px; font-weight: bold; }
+    .ok  { color: #4ade80; }
+    .err { color: #f87171; }
+    .wait { color: #94a3b8; }
+  </style>
+</head>
+<body>
+
+<h2>Fetch 진단 페이지</h2>
+<p>각 방법이 이 기기에서 작동하는지 확인합니다.</p>
+
+<input type="text" id="finnhub-key" placeholder="Finnhub API Key 입력">
+<button onclick="runAll()">전체 테스트 시작</button>
+
+<div id="results"></div>
+
+<script>
+  const TQQQ = 'TQQQ';
+  const STOOQ_URL = 'https://stooq.com/q/l/?s=tqqq.us&f=sd2t2ohlcv&e=csv';
+  const YAHOO_URL = 'https://query1.finance.yahoo.com/v8/finance/chart/TQQQ?interval=1d&range=1d';
+
+  const tests = [
+    {
+      name: 'Finnhub (직접)',
+      fn: async () => {
+        const key = document.getElementById('finnhub-key').value.trim();
+        if (!key) return { ok: false, msg: 'API Key 없음' };
+        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${TQQQ}&token=${key}`, { cache: 'no-store' });
+        const d = await res.json();
+        const p = d.c > 0 ? d.c : d.pc;
+        if (p > 0) return { ok: true, msg: `$${p.toFixed(2)}` };
+        return { ok: false, msg: `응답은 왔지만 가격 없음: ${JSON.stringify(d).slice(0,80)}` };
+      }
+    },
+    {
+      name: 'Stooq via corsproxy.io',
+      fn: async () => {
+        const res = await fetch('https://corsproxy.io/?' + encodeURIComponent(STOOQ_URL), { cache: 'no-store' });
+        return parseStooq(await res.text());
+      }
+    },
+    {
+      name: 'Stooq via allorigins.win',
+      fn: async () => {
+        const res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(STOOQ_URL), { cache: 'no-store' });
+        return parseStooq(await res.text());
+      }
+    },
+    {
+      name: 'Stooq via codetabs.com',
+      fn: async () => {
+        const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(STOOQ_URL), { cache: 'no-store' });
+        return parseStooq(await res.text());
+      }
+    },
+    {
+      name: 'Yahoo via corsproxy.io',
+      fn: async () => {
+        const res = await fetch('https://corsproxy.io/?' + encodeURIComponent(YAHOO_URL), { cache: 'no-store' });
+        return parseYahoo(await res.json());
+      }
+    },
+    {
+      name: 'Yahoo via allorigins.win',
+      fn: async () => {
+        const res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(YAHOO_URL), { cache: 'no-store' });
+        return parseYahoo(await res.json());
+      }
+    },
+    {
+      name: 'Yahoo 직접 호출',
+      fn: async () => {
+        const res = await fetch(YAHOO_URL, { cache: 'no-store' });
+        return parseYahoo(await res.json());
+      }
+    },
+  ];
+
+  function parseStooq(text) {
+    for (const line of text.trim().split('\n')) {
+      if (/symbol|date/i.test(line)) continue;
+      const cols = line.split(',');
+      if (cols.length >= 7) {
+        const p = parseFloat(cols[6]);
+        if (p > 0) return { ok: true, msg: `$${p.toFixed(2)}` };
+      }
+    }
+    return { ok: false, msg: `파싱 실패: ${text.slice(0, 80)}` };
+  }
+
+  function parseYahoo(data) {
+    const p = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (p > 0) return { ok: true, msg: `$${p.toFixed(2)}` };
+    return { ok: false, msg: '가격 없음' };
+  }
+
+  function row(name, state, msg) {
+    return `<div class="row">
+      <div class="label">${name}</div>
+      <div class="result ${state}">${msg}</div>
+    </div>`;
+  }
+
+  async function runAll() {
+    const el = document.getElementById('results');
+    el.innerHTML = tests.map(t => row(t.name, 'wait', '테스트 중...')).join('');
+    const rows = el.querySelectorAll('.row');
+
+    for (let i = 0; i < tests.length; i++) {
+      try {
+        const r = await tests[i].fn();
+        rows[i].querySelector('.result').className = 'result ' + (r.ok ? 'ok' : 'err');
+        rows[i].querySelector('.result').textContent = r.ok ? `✅ ${r.msg}` : `❌ ${r.msg}`;
+      } catch (e) {
+        rows[i].querySelector('.result').className = 'result err';
+        rows[i].querySelector('.result').textContent = `❌ ${e.message || '오류'}`;
+      }
+    }
+  }
+</script>
+</body>
+</html>
