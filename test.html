@@ -82,10 +82,43 @@
       }
     },
     {
+      name: 'Yahoo via codetabs.com',
+      fn: async () => {
+        const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(YAHOO_URL), { cache: 'no-store' });
+        return parseYahoo(await res.json());
+      }
+    },
+    {
       name: 'Yahoo 직접 호출',
       fn: async () => {
         const res = await fetch(YAHOO_URL, { cache: 'no-store' });
         return parseYahoo(await res.json());
+      }
+    },
+    {
+      name: 'Finnhub 한국주식 (KRX:157450)',
+      fn: async () => {
+        const key = document.getElementById('finnhub-key').value.trim();
+        if (!key) return { ok: false, msg: 'API Key 없음' };
+        const res  = await fetch(`https://finnhub.io/api/v1/quote?symbol=KRX:157450&token=${key}`, { cache: 'no-store' });
+        const data = await res.json();
+        if (data.error) return { ok: false, msg: data.error };
+        const p = data.c > 0 ? data.c : data.pc;
+        if (p > 0) return { ok: true, msg: `₩${p.toLocaleString()}` };
+        return { ok: false, msg: `응답은 왔지만 가격 없음 (c:${data.c} pc:${data.pc})` };
+      }
+    },
+    {
+      name: 'Finnhub 한국주식 (157450.KS)',
+      fn: async () => {
+        const key = document.getElementById('finnhub-key').value.trim();
+        if (!key) return { ok: false, msg: 'API Key 없음' };
+        const res  = await fetch(`https://finnhub.io/api/v1/quote?symbol=157450.KS&token=${key}`, { cache: 'no-store' });
+        const data = await res.json();
+        if (data.error) return { ok: false, msg: data.error };
+        const p = data.c > 0 ? data.c : data.pc;
+        if (p > 0) return { ok: true, msg: `₩${p.toLocaleString()}` };
+        return { ok: false, msg: `응답은 왔지만 가격 없음 (c:${data.c} pc:${data.pc})` };
       }
     },
   ];
