@@ -121,6 +121,63 @@
         return { ok: false, msg: `응답은 왔지만 가격 없음 (c:${data.c} pc:${data.pc})` };
       }
     },
+    {
+      name: '야후 한국주식 via codetabs (157450.KS)',
+      fn: async () => {
+        const url = 'https://query1.finance.yahoo.com/v8/finance/chart/157450.KS?interval=1d&range=1d';
+        const res  = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url), { cache: 'no-store' });
+        return parseYahoo(await res.json());
+      }
+    },
+    {
+      name: '야후 한국주식 via corsproxy.io (157450.KS)',
+      fn: async () => {
+        const url = 'https://query1.finance.yahoo.com/v8/finance/chart/157450.KS?interval=1d&range=1d';
+        const res  = await fetch('https://corsproxy.io/?' + encodeURIComponent(url), { cache: 'no-store' });
+        return parseYahoo(await res.json());
+      }
+    },
+    {
+      name: '야후 한국주식 직접 호출 (157450.KS)',
+      fn: async () => {
+        const url = 'https://query1.finance.yahoo.com/v8/finance/chart/157450.KS?interval=1d&range=1d';
+        const res  = await fetch(url, { cache: 'no-store' });
+        return parseYahoo(await res.json());
+      }
+    },
+    {
+      name: '네이버 JSON API via codetabs',
+      fn: async () => {
+        const url = 'https://m.stock.naver.com/api/stock/157450/basic';
+        const res  = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url), { cache: 'no-store' });
+        const data = await res.json();
+        const p = parseFloat(data.closePrice?.replace(/,/g, '') || data.currentPrice?.replace(/,/g, '') || '0');
+        if (p > 0) return { ok: true, msg: `₩${p.toLocaleString()}` };
+        return { ok: false, msg: `응답은 왔지만 가격 없음: ${JSON.stringify(data).slice(0,100)}` };
+      }
+    },
+    {
+      name: '네이버 JSON API via corsproxy.io',
+      fn: async () => {
+        const url = 'https://m.stock.naver.com/api/stock/157450/basic';
+        const res  = await fetch('https://corsproxy.io/?' + encodeURIComponent(url), { cache: 'no-store' });
+        const data = await res.json();
+        const p = parseFloat(data.closePrice?.replace(/,/g, '') || data.currentPrice?.replace(/,/g, '') || '0');
+        if (p > 0) return { ok: true, msg: `₩${p.toLocaleString()}` };
+        return { ok: false, msg: `응답은 왔지만 가격 없음: ${JSON.stringify(data).slice(0,100)}` };
+      }
+    },
+    {
+      name: '네이버 JSON API 직접 호출',
+      fn: async () => {
+        const url = 'https://m.stock.naver.com/api/stock/157450/basic';
+        const res  = await fetch(url, { cache: 'no-store' });
+        const data = await res.json();
+        const p = parseFloat(data.closePrice?.replace(/,/g, '') || data.currentPrice?.replace(/,/g, '') || '0');
+        if (p > 0) return { ok: true, msg: `₩${p.toLocaleString()}` };
+        return { ok: false, msg: `응답은 왔지만 가격 없음: ${JSON.stringify(data).slice(0,100)}` };
+      }
+    },
   ];
 
   function parseStooq(text) {
