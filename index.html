@@ -323,7 +323,6 @@
           <div class="flex items-center justify-between mb-3">
             <div>
               <span class="text-sm font-bold">VR</span>
-              <span id="ov-vr-status" class="text-xs ml-2 font-medium text-[#94a3b8]">--</span>
             </div>
             <button onclick="fetchVrGist()" class="text-[10px] text-[#475569] active:text-[#94a3b8]">🔄</button>
           </div>
@@ -1080,9 +1079,10 @@
     if (price > 0) {
       document.getElementById('tcc-tcycle-total').textContent = fmt$(tcycleEval + tccCash);
     }
-    const total = tcoreEval + tcycleEval;
-    if (total > 0) {
-      const coreRatio = (tcoreEval / total) * 100;
+    const tcycleSide = tcycleEval + tccCash;
+    const ratioTotal = tcoreEval + tcycleSide;
+    if (ratioTotal > 0) {
+      const coreRatio = (tcoreEval / ratioTotal) * 100;
       document.getElementById('tcc-ratio-bar').style.width = coreRatio + '%';
       document.getElementById('tcc-ratio-left').textContent = 'T코어 ' + coreRatio.toFixed(0) + '%';
       document.getElementById('tcc-ratio-right').textContent = 'T사이클 ' + (100 - coreRatio).toFixed(0) + '%';
@@ -2030,9 +2030,6 @@
       renderVrCard(vrGistData);
       if (vrGistData && mumaeGistData) { document.getElementById('rebalance-hint').classList.add('hidden'); }
     } catch (err) {
-      const statusEl = document.getElementById('ov-vr-status');
-      statusEl.textContent = '로드 실패';
-      statusEl.className = 'text-xs ml-2 font-medium text-red-400';
       console.error('VR Gist 오류:', err.message);
     }
   }
@@ -2070,19 +2067,16 @@
     document.getElementById('ov-vr-vlow').textContent  = fmt$(vlow);
     document.getElementById('ov-vr-vhigh').textContent = fmt$(vhigh);
 
+    const vrSeed = parseFloat(d.vr_seed) || calcAllocations().vr;
+    if (vrSeed > 0) {
+      document.getElementById('ov-vr-alloc').textContent = '$' + Math.round(vrSeed).toLocaleString('en-US');
+    }
     if (tqqq > 0) {
       document.getElementById('ov-vr-eval').textContent  = fmt$(evalVal);
       document.getElementById('ov-vr-total').textContent = fmt$(total);
-      const statusEl = document.getElementById('ov-vr-status');
-      if (v2 > 0) {
-        if (evalVal < vlow)       { statusEl.textContent = '매수구간'; statusEl.className = 'text-xs ml-2 font-medium text-blue-400'; }
-        else if (evalVal > vhigh) { statusEl.textContent = '매도구간'; statusEl.className = 'text-xs ml-2 font-medium text-orange-400'; }
-        else                      { statusEl.textContent = '밴드 내';  statusEl.className = 'text-xs ml-2 font-medium text-green-400'; }
-      }
-      const alloc = calcAllocations();
-      if (alloc.vr > 0) {
-        document.getElementById('ov-vr-achieve').textContent = (total / alloc.vr * 100).toFixed(0) + '%';
-        const pnl   = (total / alloc.vr - 1) * 100;
+      if (vrSeed > 0) {
+        document.getElementById('ov-vr-achieve').textContent = (total / vrSeed * 100).toFixed(0) + '%';
+        const pnl   = (total / vrSeed - 1) * 100;
         const pnlEl = document.getElementById('ov-vr-pnl');
         pnlEl.textContent = (pnl >= 0 ? '+' : '') + pnl.toFixed(1) + '%';
         pnlEl.className   = 'font-medium ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
@@ -2115,22 +2109,25 @@
   }
 
   function renderMumaeCard(d) {
-    const tqqq    = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
-    const active  = (d.portfolios || []).filter(p => !p.ended);
-    const fmt$    = v => '$' + Math.round(v).toLocaleString('en-US');
-    const fmtPct  = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
-    const listEl  = document.getElementById('ov-moomae-list');
+    const tqqq   = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+    const soxl   = parseFloat(localStorage.getItem('sc_soxl_price')  || '0');
+    const active = (d.portfolios || []).filter(p => !p.ended);
+    const fmt$   = v => '$' + Math.round(v).toLocaleString('en-US');
+    const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+    const listEl = document.getElementById('ov-moomae-list');
 
     if (!active.length) {
       listEl.innerHTML = '<p class="text-[10px] text-[#64748b] text-center py-2">활성 포트폴리오 없음</p>';
       return;
     }
 
-    let totalEval = 0;
+    let totalEval = 0, totalCost = 0;
     listEl.innerHTML = active.map(p => {
-      const evalVal = p.hold_qty * tqqq;
-      totalEval += evalVal;
-      const pnl = (p.avg_price > 0 && tqqq > 0) ? (tqqq / p.avg_price - 1) * 100 : null;
+      const px      = (p.symbol || '').toUpperCase() === 'SOXL' ? soxl : tqqq;
+      const evalVal = p.hold_qty * px;
+      totalEval    += evalVal;
+      totalCost    += p.hold_qty * (p.avg_price || 0);
+      const pnl      = (p.avg_price > 0 && px > 0) ? (px / p.avg_price - 1) * 100 : null;
       const pnlClass = pnl !== null ? (pnl >= 0 ? 'text-green-400' : 'text-red-400') : 'text-[#94a3b8]';
       const pnlStr   = pnl !== null ? fmtPct(pnl) : '--';
       const avgStr   = p.avg_price > 0 ? '$' + Number(p.avg_price).toFixed(2) : '--';
@@ -2141,17 +2138,18 @@
         </div>
         <div class="flex justify-between text-[10px]">
           <span class="text-[#64748b]">${p.hold_qty}주 · ${avgStr}</span>
-          <span class="text-[#94a3b8]">${tqqq > 0 ? fmt$(evalVal) : '--'}</span>
+          <span class="text-[#94a3b8]">${px > 0 ? fmt$(evalVal) : '--'}</span>
         </div>
       </div>`;
     }).join('');
 
-    const totalSeed = active.reduce((s, p) => s + (p.seed || 0), 0);
-    document.getElementById('ov-moomae-eval').textContent = tqqq > 0 ? fmt$(totalEval) : '--';
-    if (totalSeed > 0 && tqqq > 0) {
-      const pnl   = (totalEval / totalSeed - 1) * 100;
+    const totalSeed       = active.reduce((s, p) => s + (p.seed || 0), 0);
+    const anyPrice        = tqqq > 0 || soxl > 0;
+    document.getElementById('ov-moomae-eval').textContent = anyPrice ? fmt$(totalEval) : '--';
+    if (totalSeed > 0 && anyPrice) {
+      const pnl   = ((totalEval + totalSeed - totalCost) / totalSeed - 1) * 100;
       const pnlEl = document.getElementById('ov-moomae-pnl');
-      pnlEl.textContent = (pnl >= 0 ? '+' : '') + pnl.toFixed(1) + '%';
+      pnlEl.textContent = fmtPct(pnl);
       pnlEl.className   = 'font-medium ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
     }
     const alloc = calcAllocations();
