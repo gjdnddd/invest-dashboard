@@ -2276,7 +2276,7 @@ const SHEET_HEADERS = {
   '퇴직연금': ['날짜','총시드','평가금','예수금','합산','합산수익률','평가금수익률'],
   '국장단타': ['날짜','시드','평가금','예수금','합계','수익률'],
   'VR':       ['날짜','할당시드','평가금','Pool','합계','수익률','V2','Vlow','Vhigh'],
-  '무매':     ['날짜','할당시드','합산평가금','달성률','수익률(매수금대비)']
+  '무매':     ['날짜','시드','매수금','예수금','평가금','수익률']
 };
 
 function doPost(e) {
@@ -2364,12 +2364,16 @@ function doGet(e) {
         const vrTotal  = vrShares * tqqq + vrPool;
         if (vrTotal > 0) document.getElementById('sheets-total-vr').value = Math.round(vrTotal);
       }
-      // 무매 합계 자동 채우기
+      // 무매 합계 자동 채우기 (SOXL 포트폴리오는 SOXL 가격 사용)
       if (mumaeGistData) {
-        const tqqq = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+        const tqqq_m = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+        const soxl_m = parseFloat(localStorage.getItem('sc_soxl_price')  || '0');
         const active = (mumaeGistData.portfolios || []).filter(p => !p.ended);
-        const mumaeTotal = active.reduce((s, p) => s + (p.hold_qty * tqqq), 0);
-        if (mumaeTotal > 0) document.getElementById('sheets-total-moomae').value = Math.round(mumaeTotal);
+        const mumaeEval = active.reduce((s, p) => {
+          const px = (p.symbol || '').toUpperCase() === 'SOXL' ? soxl_m : tqqq_m;
+          return s + p.hold_qty * px;
+        }, 0);
+        if (mumaeEval > 0) document.getElementById('sheets-total-moomae').value = Math.round(mumaeEval);
       }
       // 국장 최근 기록 자동 채우기
       const kLatest = [...getKstockHistory()].sort((a, b) => b.date.localeCompare(a.date))[0];
@@ -2492,17 +2496,19 @@ function doGet(e) {
     const vrPnl   = alloc.vr > 0 ? fmtPct((vrTotal / alloc.vr - 1) * 100) : '';
 
     // 무매
-    let mumaeTotal = 0;
+    let mumaeEval = 0, mumaeSeed = 0, mumaeCost = 0;
     if (mumaeGistData) {
       const active = (mumaeGistData.portfolios || []).filter(p => !p.ended);
-      mumaeTotal = active.reduce((s, p) => s + (p.hold_qty * tqqq), 0);
+      mumaeSeed = active.reduce((s, p) => s + (p.seed || 0), 0);
+      mumaeCost = active.reduce((s, p) => s + p.hold_qty * (p.avg_price || 0), 0);
+      mumaeEval = active.reduce((s, p) => {
+        const px = (p.symbol || '').toUpperCase() === 'SOXL' ? soxl : tqqq;
+        return s + p.hold_qty * px;
+      }, 0);
     }
-    if (!mumaeTotal) mumaeTotal = parseFloat(document.getElementById('sheets-total-moomae').value) || 0;
-    const mumaeAchieve  = alloc.moomae > 0 ? (mumaeTotal / alloc.moomae * 100).toFixed(1) + '%' : '';
-    const mumaeCostB    = mumaeGistData
-      ? (mumaeGistData.portfolios || []).filter(p => !p.ended).reduce((s, p) => s + (p.hold_qty * (p.avg_price || 0)), 0)
-      : 0;
-    const mumaeHoldPnl  = mumaeCostB > 0 ? fmtPct((mumaeTotal / mumaeCostB - 1) * 100) : '';
+    if (!mumaeEval) mumaeEval = parseFloat(document.getElementById('sheets-total-moomae').value) || 0;
+    const mumaeCash = mumaeSeed - mumaeCost;
+    const mumaePnl  = mumaeSeed > 0 ? fmtPct(((mumaeCash + mumaeEval) / mumaeSeed - 1) * 100) : '';
 
     const payload = {
       'TCC':      [date, alloc.tcc||0, Math.round(tcEval), tcPnl, Math.round(tsEval), Math.round(cashTcc), Math.round(tsGrand), tsPnl, Math.round(tccGrand), tccPnl, tccRatio],
@@ -2510,7 +2516,7 @@ function doGet(e) {
       '퇴직연금': [date, Math.round(pensionSeed), Math.round(pensionEval), Math.round(cashPension), Math.round(pensionGrand), pensionGrandPnl, pensionEvalPnl],
       '국장단타': [date, Math.round(seedKstock), Math.round(evalKstock), Math.round(cashKstock), Math.round(evalKstock + cashKstock), kstockPnl],
       'VR':       [date, alloc.vr||0, Math.round(vrEval), Math.round(vrPool), Math.round(vrTotal), vrPnl, Math.round(vrV2), Math.round(vrVlow), Math.round(vrVhigh)],
-      '무매':     [date, alloc.moomae||0, Math.round(mumaeTotal), mumaeAchieve, mumaeHoldPnl],
+      '무매':     [date, Math.round(mumaeSeed), Math.round(mumaeCost), Math.round(mumaeCash), Math.round(mumaeEval), mumaePnl],
     };
 
     try {
