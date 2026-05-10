@@ -50,14 +50,26 @@
 
       <!-- 시드+비중 설정 카드 -->
       <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
-        <div class="px-4 py-3 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <span class="text-xs text-[#64748b]">총 시드</span>
-            <span class="text-sm font-bold" id="ov-total-seed">--</span>
+        <div class="px-4 py-3">
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-1.5 text-[11px] flex-1 min-w-0">
+              <span class="text-[#64748b] flex-shrink-0">미국</span>
+              <span class="font-bold" id="ov-seed-us">--</span>
+              <span class="text-[#475569] flex-shrink-0">→</span>
+              <span class="font-bold" id="ov-eval-us">--</span>
+              <span class="font-medium" id="ov-pnl-us">--</span>
+            </div>
+            <button onclick="toggleSection('cfg-section','cfg-arrow')" class="text-[10px] text-[#64748b] flex items-center gap-1 active:opacity-70 flex-shrink-0 ml-2">
+              설정 <span id="cfg-arrow">▼</span>
+            </button>
           </div>
-          <button onclick="toggleSection('cfg-section','cfg-arrow')" class="text-[10px] text-[#64748b] flex items-center gap-1 active:opacity-70">
-            설정 <span id="cfg-arrow">▼</span>
-          </button>
+          <div class="flex items-center gap-1.5 text-[11px]">
+            <span class="text-[#64748b] flex-shrink-0">원화</span>
+            <span class="font-bold" id="ov-seed-kr">--</span>
+            <span class="text-[#475569] flex-shrink-0">→</span>
+            <span class="font-bold" id="ov-eval-kr">--</span>
+            <span class="font-medium" id="ov-pnl-kr">--</span>
+          </div>
         </div>
         <div id="cfg-section" class="hidden border-t border-[#334155] px-4 py-3 bg-[#0a1120]">
           <div class="mb-3">
@@ -304,15 +316,23 @@
             </div>
           </div>
           <div id="ov-moomae-list"><p class="text-[10px] text-[#475569] text-center py-2">Gist 미연동</p></div>
-          <div class="mt-2 flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
-            <span class="text-[#64748b]">할당 시드</span>
-            <span class="text-[#94a3b8]" id="ov-moomae-alloc">--</span>
-            <span class="text-[#64748b]">합산 평가금</span>
-            <span class="text-[#94a3b8]" id="ov-moomae-eval">--</span>
-          </div>
-          <div class="mt-1 flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
-            <span class="text-[#64748b]">달성률</span>
-            <span id="ov-moomae-pnl" class="font-medium text-[#94a3b8]">--</span>
+          <div class="mt-2 space-y-1">
+            <div class="flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
+              <span class="text-[#64748b]">총 최초시드</span>
+              <span class="text-[#94a3b8]" id="ov-moomae-total-seed">--</span>
+              <span class="text-[#64748b]">총 현시드</span>
+              <span class="text-[#94a3b8]" id="ov-moomae-cur-seed">--</span>
+            </div>
+            <div class="flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
+              <span class="text-[#64748b]">할당 시드</span>
+              <span class="text-[#94a3b8]" id="ov-moomae-alloc">--</span>
+              <span class="text-[#64748b]">합산 평가금</span>
+              <span class="text-[#94a3b8]" id="ov-moomae-eval">--</span>
+            </div>
+            <div class="flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
+              <span class="text-[#64748b]">수익률</span>
+              <span id="ov-moomae-pnl" class="font-medium text-[#94a3b8]">--</span>
+            </div>
           </div>
         </div>
       </div>
@@ -343,7 +363,7 @@
             <span class="text-[#94a3b8]" id="ov-vr-achieve">--</span>
           </div>
           <div class="mt-1 flex items-center justify-between text-[10px] bg-[#0f172a] rounded-lg px-3 py-1.5">
-            <span class="text-[#64748b]">달성률</span>
+            <span class="text-[#64748b]">총평가시드</span>
             <span id="ov-vr-pnl" class="font-medium text-[#94a3b8]">--</span>
           </div>
         </div>
@@ -1097,6 +1117,7 @@
 
     // 전략현황 탭 TCC 카드 업데이트
     renderOverviewTcc(tc, ts, price, tcoreEval, tcycleEval);
+    renderOverviewHeader();
   }
 
   function renderHistoryTable(containerId, history, type) {
@@ -1401,6 +1422,7 @@
         el.className = holdingPnl >= 0 ? 'text-green-400' : 'text-red-400';
       }
     }
+    renderOverviewHeader();
   }
 
   function addScHistory() {
@@ -1582,6 +1604,7 @@
         ${pnlStr ? `<div class="flex justify-end"><span class="text-[10px] ${pnlCls}">${pnlStr}</span></div>` : ''}
       </div>`;
     }).join('');
+    renderOverviewHeader();
   }
 
   function addPensionSeed() {
@@ -1848,9 +1871,6 @@
     document.getElementById('cfg-ratio-vr').value      = cfg.ratios.vr;
     document.getElementById('cfg-ratio-moomae').value  = cfg.ratios.moomae;
 
-    // 총 시드 헤더
-    document.getElementById('ov-total-seed').textContent = alloc.total > 0 ? fmt$(alloc.total) : '--';
-
     // 각 카드 할당 시드
     document.getElementById('ov-tcc-alloc').textContent    = alloc.tcc    > 0 ? fmt$(alloc.tcc)    + ' (' + fmtPct(cfg.ratios.tcc)    + ')' : '--';
     document.getElementById('ov-sc-alloc').textContent     = alloc.scycle > 0 ? fmt$(alloc.scycle) + ' (' + fmtPct(cfg.ratios.scycle) + ')' : '--';
@@ -1861,6 +1881,79 @@
     document.getElementById('tcc-alloc-seed').textContent = alloc.tcc    > 0 ? fmt$(alloc.tcc)    : '--';
     document.getElementById('sc-alloc-seed').textContent  = alloc.scycle > 0 ? fmt$(alloc.scycle) : '--';
 
+    renderOverviewHeader();
+  }
+
+  function renderOverviewHeader() {
+    const alloc  = calcAllocations();
+    const tqqq   = parseFloat(localStorage.getItem('tcc_tqqq_price') || '0');
+    const soxl   = parseFloat(localStorage.getItem('sc_soxl_price')  || '0');
+    const fmt$   = v => '$' + Math.round(v).toLocaleString('en-US');
+    const fmtW   = v => '₩' + Math.round(v).toLocaleString('ko-KR');
+    const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+
+    // ── 미국 시드
+    const seedUs = alloc.tcc + alloc.scycle + alloc.vr + alloc.moomae;
+
+    // ── 미국 현평가금
+    const tcPos  = calcPosition(JSON.parse(localStorage.getItem('tcc_tcore')  || '[]'));
+    const tsPos  = calcPosition(JSON.parse(localStorage.getItem('tcc_tcycle') || '[]'));
+    const tccCash = parseFloat(localStorage.getItem('tcc_cash') || '0');
+    const scPos  = calcPosition(JSON.parse(localStorage.getItem('sc_history') || '[]'));
+    const scCash = parseFloat(localStorage.getItem('sc_cash')   || '0');
+    let evalUs = (tcPos.currentShares + tsPos.currentShares) * tqqq + tccCash
+               + scPos.currentShares * soxl + scCash;
+    if (vrGistData) {
+      evalUs += (parseFloat(vrGistData.vr_shares) || 0) * tqqq
+              + (parseFloat(vrGistData.vr_pool)   || 0);
+    }
+    if (mumaeGistData) {
+      const active    = (mumaeGistData.portfolios || []).filter(p => !p.ended);
+      const mSeed     = active.reduce((s, p) => s + (p.seed || 0), 0);
+      const mCost     = active.reduce((s, p) => s + p.hold_qty * (p.avg_price || 0), 0);
+      const mEval     = active.reduce((s, p) => {
+        const px = (p.symbol || '').toUpperCase() === 'SOXL' ? soxl : tqqq;
+        return s + p.hold_qty * px;
+      }, 0);
+      evalUs += mEval + (mSeed - mCost);
+    }
+
+    // ── 원화 시드
+    const pensionSeed = getPensionSeeds().reduce((s, r) => s + r.amount, 0);
+    const kstockSeed  = parseFloat(localStorage.getItem('kstock_seed') || '0');
+    const seedKr = pensionSeed + kstockSeed;
+
+    // ── 원화 현평가금
+    const holdings    = getPensionHoldings();
+    const prices      = getPensionPrices();
+    const pensionCash = parseFloat(localStorage.getItem('pension_cash') || '0');
+    const pensionEval = holdings.reduce((s, h) => s + h.shares * (prices[h.ticker] || 0), 0);
+    const kLatest     = [...getKstockHistory()].sort((a, b) => b.date.localeCompare(a.date))[0];
+    const kEval       = kLatest ? (kLatest.eval || 0) + (kLatest.cash || 0) : 0;
+    const evalKr = pensionEval + pensionCash + kEval;
+
+    // ── 렌더
+    document.getElementById('ov-seed-us').textContent = seedUs > 0 ? fmt$(seedUs) : '--';
+    if (evalUs > 0 && seedUs > 0) {
+      document.getElementById('ov-eval-us').textContent = fmt$(evalUs);
+      const pnl = (evalUs / seedUs - 1) * 100;
+      const el  = document.getElementById('ov-pnl-us');
+      el.textContent = fmtPct(pnl);
+      el.className   = 'font-medium ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+    } else {
+      document.getElementById('ov-eval-us').textContent = '--';
+    }
+
+    document.getElementById('ov-seed-kr').textContent = seedKr > 0 ? fmtW(seedKr) : '--';
+    if (evalKr > 0 && seedKr > 0) {
+      document.getElementById('ov-eval-kr').textContent = fmtW(evalKr);
+      const pnl = (evalKr / seedKr - 1) * 100;
+      const el  = document.getElementById('ov-pnl-kr');
+      el.textContent = fmtPct(pnl);
+      el.className   = 'font-medium ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
+    } else {
+      document.getElementById('ov-eval-kr').textContent = '--';
+    }
   }
 
   // ══════════════════════════════════
@@ -1923,6 +2016,7 @@
           <button onclick="deleteKstockRecord(${r.id})" class="text-[#475569] hover:text-red-400 text-[11px] ml-1 flex-shrink-0">✕</button>
         </div>`;
     }).join('') : '<p class="text-[10px] text-[#64748b] text-center py-3">기록 없음</p>';
+    renderOverviewHeader();
   }
 
   function addKstockRecord() {
@@ -2076,15 +2170,14 @@
       document.getElementById('ov-vr-total').textContent = fmt$(total);
       if (vrSeed > 0) {
         document.getElementById('ov-vr-achieve').textContent = (total / vrSeed * 100).toFixed(0) + '%';
-        const pnl   = (total / vrSeed - 1) * 100;
-        const pnlEl = document.getElementById('ov-vr-pnl');
-        pnlEl.textContent = (pnl >= 0 ? '+' : '') + pnl.toFixed(1) + '%';
-        pnlEl.className   = 'font-medium ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
       }
+      document.getElementById('ov-vr-pnl').textContent = fmt$(total);
+      document.getElementById('ov-vr-pnl').className   = 'font-medium text-[#f1f5f9]';
     } else {
       document.getElementById('ov-vr-eval').textContent  = '--';
       document.getElementById('ov-vr-total').textContent = '--';
     }
+    renderOverviewHeader();
   }
 
   async function fetchMumaeGist() {
@@ -2131,21 +2224,35 @@
       const pnlClass = pnl !== null ? (pnl >= 0 ? 'text-green-400' : 'text-red-400') : 'text-[#94a3b8]';
       const pnlStr   = pnl !== null ? fmtPct(pnl) : '--';
       const avgStr   = p.avg_price > 0 ? '$' + Number(p.avg_price).toFixed(2) : '--';
+      const seedStr  = p.seed > 0 ? fmt$(p.seed) : '--';
       return `<div class="bg-[#0f172a] rounded-lg px-3 py-2 mb-1.5">
         <div class="flex items-center justify-between mb-1">
           <span class="text-xs font-medium">${p.name}</span>
           <span class="text-[10px] ${pnlClass}">${pnlStr}</span>
         </div>
-        <div class="flex justify-between text-[10px]">
+        <div class="flex justify-between text-[10px] mb-0.5">
           <span class="text-[#64748b]">${p.hold_qty}주 · ${avgStr}</span>
           <span class="text-[#94a3b8]">${px > 0 ? fmt$(evalVal) : '--'}</span>
+        </div>
+        <div class="flex justify-between text-[10px]">
+          <span class="text-[#475569]">할당 ${seedStr}</span>
         </div>
       </div>`;
     }).join('');
 
-    const totalSeed       = active.reduce((s, p) => s + (p.seed || 0), 0);
-    const anyPrice        = tqqq > 0 || soxl > 0;
-    document.getElementById('ov-moomae-eval').textContent = anyPrice ? fmt$(totalEval) : '--';
+    // 총 최초시드 (전체 포트폴리오) / 총 현시드 (활성 eval+예수금 + 종료 seed+acc_profit)
+    const all         = d.portfolios || [];
+    const totalSeed   = active.reduce((s, p) => s + (p.seed || 0), 0);
+    const totalSeedAll = all.reduce((s, p) => s + (p.seed || 0), 0);
+    const endedCurVal = all.filter(p => p.ended)
+                           .reduce((s, p) => s + (p.seed || 0) + (p.acc_profit || 0), 0);
+    const anyPrice    = tqqq > 0 || soxl > 0;
+    const curSeed     = anyPrice ? (totalEval + (totalSeed - totalCost) + endedCurVal) : null;
+
+    document.getElementById('ov-moomae-total-seed').textContent = totalSeedAll > 0 ? fmt$(totalSeedAll) : '--';
+    document.getElementById('ov-moomae-cur-seed').textContent   = curSeed !== null ? fmt$(curSeed) : '--';
+    document.getElementById('ov-moomae-eval').textContent       = anyPrice ? fmt$(totalEval) : '--';
+
     if (totalSeed > 0 && anyPrice) {
       const pnl   = ((totalEval + totalSeed - totalCost) / totalSeed - 1) * 100;
       const pnlEl = document.getElementById('ov-moomae-pnl');
@@ -2160,6 +2267,7 @@
     } else {
       achEl.textContent = '--';
     }
+    renderOverviewHeader();
   }
 
   async function fetchInvestData() {
