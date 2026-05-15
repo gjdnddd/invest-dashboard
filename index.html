@@ -1869,8 +1869,10 @@
     document.getElementById('cfg-ratio-moomae').value  = cfg.ratios.moomae;
 
     // 각 카드 할당 시드
-    document.getElementById('ov-tcc-alloc').textContent    = alloc.tcc    > 0 ? fmt$(alloc.tcc)    + ' (' + fmtPct(cfg.ratios.tcc)    + ')' : '--';
-    document.getElementById('ov-sc-alloc').textContent     = alloc.scycle > 0 ? fmt$(alloc.scycle) + ' (' + fmtPct(cfg.ratios.scycle) + ')' : '--';
+    const tccAllocEl = document.getElementById('ov-tcc-alloc');
+    if (tccAllocEl) tccAllocEl.textContent = alloc.tcc > 0 ? fmt$(alloc.tcc) + ' (' + fmtPct(cfg.ratios.tcc) + ')' : '--';
+    const scAllocEl = document.getElementById('ov-sc-alloc');
+    if (scAllocEl) scAllocEl.textContent = alloc.scycle > 0 ? fmt$(alloc.scycle) + ' (' + fmtPct(cfg.ratios.scycle) + ')' : '--';
     document.getElementById('ov-moomae-alloc').textContent = alloc.moomae > 0 ? fmt$(alloc.moomae) + ' (' + fmtPct(cfg.ratios.moomae) + ')' : '--';
     document.getElementById('ov-vr-alloc').textContent     = alloc.vr     > 0 ? fmt$(alloc.vr)     + ' (' + fmtPct(cfg.ratios.vr)     + ')' : '--';
 
