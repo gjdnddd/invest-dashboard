@@ -2250,17 +2250,13 @@
       </div>`;
     }).join('');
 
-    // 총 최초시드 (전체 포트폴리오) / 총 현시드 (활성 eval+예수금 + 종료 seed+acc_profit)
-    const all         = d.portfolios || [];
+    const initialTotalSeed = parseFloat(d.initial_totalSeed) || 0;
+    const currentTotalSeed = parseFloat(d.totalSeed) || 0;
     const totalSeed   = active.reduce((s, p) => s + (p.seed || 0), 0);
-    const totalSeedAll = all.reduce((s, p) => s + (p.seed || 0), 0);
-    const endedCurVal = all.filter(p => p.ended)
-                           .reduce((s, p) => s + (p.seed || 0) + (p.acc_profit || 0), 0);
     const anyPrice    = tqqq > 0 || soxl > 0;
-    const curSeed     = anyPrice ? (totalEval + (totalSeed - totalCost) + endedCurVal) : null;
 
-    document.getElementById('ov-moomae-total-seed').textContent = totalSeedAll > 0 ? fmt$(totalSeedAll) : '--';
-    document.getElementById('ov-moomae-cur-seed').textContent   = curSeed !== null ? fmt$(curSeed) : '--';
+    document.getElementById('ov-moomae-total-seed').textContent = initialTotalSeed > 0 ? fmt$(initialTotalSeed) : '--';
+    document.getElementById('ov-moomae-cur-seed').textContent   = currentTotalSeed > 0 ? fmt$(currentTotalSeed) : '--';
     document.getElementById('ov-moomae-eval').textContent       = anyPrice ? fmt$(totalEval) : '--';
 
     if (totalSeed > 0 && anyPrice) {
