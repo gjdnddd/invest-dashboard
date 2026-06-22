@@ -1204,6 +1204,9 @@
     const history = JSON.parse(localStorage.getItem(key) || '[]');
     history.push({ id: Date.now(), date, type: tradeType, shares, price });
     localStorage.setItem(key, JSON.stringify(history));
+    const tccCash = parseFloat(localStorage.getItem('tcc_cash') || '0');
+    const tccDelta = shares * price * (tradeType === 'buy' ? -1 : 1);
+    localStorage.setItem('tcc_cash', Math.max(0, tccCash + tccDelta).toString());
     document.getElementById(type + '-form-shares').value = '';
     document.getElementById(type + '-form-price').value = '';
     renderTccTab();
@@ -1434,6 +1437,9 @@
     const history = JSON.parse(localStorage.getItem('sc_history') || '[]');
     history.push({ id: Date.now(), date, type: tradeType, shares, price });
     localStorage.setItem('sc_history', JSON.stringify(history));
+    const scCash = parseFloat(localStorage.getItem('sc_cash') || '0');
+    const scDelta = shares * price * (tradeType === 'buy' ? -1 : 1);
+    localStorage.setItem('sc_cash', Math.max(0, scCash + scDelta).toString());
     document.getElementById('sc-form-shares').value = '';
     document.getElementById('sc-form-price').value = '';
     renderScTab();
