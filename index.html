@@ -1830,10 +1830,15 @@
   // 설정 (시드+비중)
   // ══════════════════════════════════
   function getConfig() {
-    return JSON.parse(localStorage.getItem('invest_config') || JSON.stringify({
-      totalSeed: 0,
-      ratios: { tcc: 10, scycle: 5, vr: 6, moomae: 9 }
-    }));
+    const DEFAULT_RATIOS = { tcc: 10, scycle: 5, vr: 6, moomae: 9 };
+    const raw = JSON.parse(localStorage.getItem('invest_config') || 'null') || {};
+    return { totalSeed: raw.totalSeed || 0, ratios: { ...DEFAULT_RATIOS, ...(raw.ratios || {}) } };
+  }
+
+  function updateAllocAndAchieve() {
+    renderOverviewConfig();
+    if (vrGistData)    renderVrCard(vrGistData);
+    if (mumaeGistData) renderMumaeCard(mumaeGistData);
   }
 
   function calcAllocations() {
