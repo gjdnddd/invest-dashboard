@@ -169,6 +169,10 @@
             <input type="password" id="cfg-finnhub-key" placeholder="finnhub.io에서 발급"
               class="w-full bg-[#1e293b] border border-[#334155] rounded-lg px-2 py-1.5 text-[10px] text-white outline-none focus:border-blue-500">
           </div>
+          <div class="mt-3 flex gap-2">
+            <button onclick="withSpin(this, saveGistCredentials)" class="flex-1 bg-blue-600 text-white text-xs py-2 rounded-lg font-medium active:opacity-70"><span class="inline-block">🔄</span> 인증정보 저장</button>
+            <button onclick="withSpin(this, loadAllGistData)" class="flex-1 bg-[#0f172a] text-[#94a3b8] text-xs py-2 rounded-lg border border-[#334155] active:opacity-70"><span class="inline-block">↓</span> 불러오기</button>
+          </div>
         </div>
       </div>
 
@@ -1867,6 +1871,13 @@
     localStorage.setItem('invest_config', JSON.stringify({ totalSeed, ratios }));
     const sheetsUrl = document.getElementById('cfg-apps-script-url').value.trim();
     if (sheetsUrl) localStorage.setItem('sheets_url', sheetsUrl);
+    renderOverviewConfig();
+    pushInvestData();
+  }
+
+  // 인증정보(Gist ID/Token, VR·무매 Gist ID, Finnhub Key)는 기기별 로컬 전용 — push 대상 아님
+  // 저장 직후 해당 인증정보로 즉시 불러오기(pull)까지 수행
+  function saveGistCredentials() {
     const gistId = document.getElementById('cfg-gist-id').value.trim();
     const gistToken = document.getElementById('cfg-gist-token').value.trim();
     if (gistId) localStorage.setItem('gist_id', gistId);
@@ -1877,8 +1888,15 @@
     if (mumaeGistIdInput) localStorage.setItem('mumae_gist_id', mumaeGistIdInput);
     const finnhubKey = document.getElementById('cfg-finnhub-key').value.trim();
     if (finnhubKey) localStorage.setItem('finnhub_key', finnhubKey);
-    renderOverviewConfig();
-    pushInvestData();
+    return loadAllGistData();
+  }
+
+  // Gist 4종(알람상태·투자데이터·VR·무매) 전체 불러오기 — init() 및 수동 버튼에서 공통 사용
+  async function loadAllGistData() {
+    const { id, token } = getGistConfig();
+    const tasks = [fetchVrGist(), fetchMumaeGist()];
+    if (id && token) tasks.push(fetchGistData(), fetchInvestData());
+    await Promise.all(tasks);
   }
 
   let _rebalanceTotal = 0;
@@ -2937,8 +2955,7 @@ function doGet(e) {
     if (savedMumaeGistId) document.getElementById('cfg-mumae-gist-id').value = savedMumaeGistId;
     const savedFinnhubKey = localStorage.getItem('finnhub_key');
     if (savedFinnhubKey) document.getElementById('cfg-finnhub-key').value   = savedFinnhubKey;
-    if (savedGistId && savedGistToken) { fetchGistData(); fetchInvestData(); }
-    fetchVrGist(); fetchMumaeGist();
+    loadAllGistData();
 
     renderTccTab();
     renderScTab();
