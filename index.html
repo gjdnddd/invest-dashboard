@@ -891,6 +891,35 @@
         </div>
       </div>
 
+      <!-- 환율 대응 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+        <div class="px-4 pt-4 pb-3">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-bold">환율 대응</span>
+            <button onclick="withSpin(this, fetchUsdKrwRate)" class="text-xs bg-[#0f172a] text-[#94a3b8] px-2 py-1 rounded-lg border border-[#334155] active:opacity-70"><span class="inline-block">🔄</span> 환율 새로고침</button>
+          </div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-[10px] text-[#64748b] flex-shrink-0">USD/KRW</span>
+            <input type="number" id="pension-fx-rate-input" placeholder="0" min="0" step="1"
+              onchange="setUsdKrwRateManual(this.value)"
+              class="flex-1 bg-[#0f172a] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+            <span class="text-[10px] text-[#64748b] flex-shrink-0" id="pension-fx-rate-time"></span>
+          </div>
+          <div class="bg-[#0f172a] rounded-lg p-3 mb-2">
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-[#94a3b8]">매칭 구간</span>
+              <span id="pension-fx-tier">--</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-[#94a3b8]">목표 비율 (미국단기채:단기통안채)</span>
+              <span id="pension-fx-ratio">--</span>
+            </div>
+          </div>
+          <div class="space-y-2" id="pension-fx-compare"></div>
+          <p class="text-[10px] text-[#64748b] mt-2">※ 정보성 참고용 — 실제 스위칭은 직접 판단·실행</p>
+        </div>
+      </div>
+
     </div>
 
     <!-- ══════════════════════════════════
@@ -1648,6 +1677,52 @@
         ${pnlStr ? `<div class="flex justify-end"><span class="text-[10px] ${pnlCls}">${pnlStr}</span></div>` : ''}
       </div>`;
     }).join('');
+
+    // 환율 대응
+    const fxRate = getUsdKrwRate();
+    const fxRateInput = document.getElementById('pension-fx-rate-input');
+    if (fxRateInput && !fxRateInput.matches(':focus')) fxRateInput.value = fxRate > 0 ? fxRate : '';
+    const fxTime = parseInt(localStorage.getItem('usdkrw_rate_time') || '0');
+    const fxTimeEl = document.getElementById('pension-fx-rate-time');
+    if (fxTimeEl) fxTimeEl.textContent = fxTime ? new Date(fxTime).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준' : '';
+
+    const tonganH   = holdings.find(h => h.ticker === '390390');
+    const usBondH   = holdings.find(h => h.ticker === '0046A0');
+    const tonganEval = tonganH ? tonganH.shares * (prices['390390'] || 0) : 0;
+    const usBondEval = usBondH ? usBondH.shares * (prices['0046A0'] || 0) : 0;
+    const fxPool     = tonganEval + usBondEval;
+
+    const tierEl    = document.getElementById('pension-fx-tier');
+    const ratioEl   = document.getElementById('pension-fx-ratio');
+    const compareEl = document.getElementById('pension-fx-compare');
+    if (fxRate > 0 && fxPool > 0) {
+      const tier = matchFxTier(fxRate);
+      tierEl.textContent  = tier.rate.toLocaleString('ko-KR') + '원 구간';
+      ratioEl.textContent = tier.usBond + '% : ' + tier.tongan + '%';
+      const targetUsBond = fxPool * tier.usBond / 100;
+      const targetTongan = fxPool * tier.tongan / 100;
+      const diffLabel = v => Math.abs(v) < 1 ? '±0' : (v > 0 ? `초과 ${fmtW(v)}` : `부족 ${fmtW(-v)}`);
+      compareEl.innerHTML = `
+        <div class="bg-[#0f172a] rounded-lg p-3">
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-[#94a3b8]">미국단기채ETF (0046A0)</span>
+            <span>${fmtW(usBondEval)} / 목표 ${fmtW(targetUsBond)}</span>
+          </div>
+          <div class="flex justify-end text-[10px] text-[#94a3b8]">${diffLabel(usBondEval - targetUsBond)}</div>
+        </div>
+        <div class="bg-[#0f172a] rounded-lg p-3">
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-[#94a3b8]">단기통안채 (390390)</span>
+            <span>${fmtW(tonganEval)} / 목표 ${fmtW(targetTongan)}</span>
+          </div>
+          <div class="flex justify-end text-[10px] text-[#94a3b8]">${diffLabel(tonganEval - targetTongan)}</div>
+        </div>`;
+    } else if (tierEl && ratioEl && compareEl) {
+      tierEl.textContent  = '--';
+      ratioEl.textContent = '--';
+      compareEl.innerHTML = `<p class="text-[10px] text-[#64748b] text-center py-3">${fxRate > 0 ? '두 종목 평가금 확인 필요' : '환율을 먼저 조회해주세요'}</p>`;
+    }
+
     renderOverviewHeader();
   }
 
@@ -1770,6 +1845,43 @@
     for (const h of holdings) { if (h.ticker) await fetchPensionPrice(h.ticker); }
   }
 
+  // ══════════════════════════════════
+  // 퇴직연금 환율 대응 (7단계 표 — 미국단기채ETF/단기통안채 비중)
+  // ══════════════════════════════════
+  const FX_TIERS = [
+    { rate: 1200, usBond: 80, tongan: 20 },
+    { rate: 1250, usBond: 70, tongan: 30 },
+    { rate: 1300, usBond: 60, tongan: 40 },
+    { rate: 1350, usBond: 50, tongan: 50 },
+    { rate: 1400, usBond: 40, tongan: 60 },
+    { rate: 1450, usBond: 30, tongan: 70 },
+    { rate: 1500, usBond: 20, tongan: 80 }
+  ];
+  function matchFxTier(rate) {
+    if (rate <= FX_TIERS[0].rate) return FX_TIERS[0];
+    if (rate >= FX_TIERS[FX_TIERS.length - 1].rate) return FX_TIERS[FX_TIERS.length - 1];
+    return FX_TIERS.reduce((a, b) => Math.abs(b.rate - rate) < Math.abs(a.rate - rate) ? b : a);
+  }
+
+  function getUsdKrwRate() { return parseFloat(localStorage.getItem('usdkrw_rate') || '0'); }
+
+  async function fetchUsdKrwRate() {
+    const p = await fetchQuote('KRW=X', 'us');
+    if (p !== null) {
+      localStorage.setItem('usdkrw_rate', p);
+      localStorage.setItem('usdkrw_rate_time', Date.now().toString());
+      renderPensionTab();
+    }
+  }
+
+  function setUsdKrwRateManual(value) {
+    const p = parseFloat(value);
+    if (!p || p <= 0) return;
+    localStorage.setItem('usdkrw_rate', p.toString());
+    localStorage.setItem('usdkrw_rate_time', Date.now().toString());
+    renderPensionTab();
+  }
+
   async function fetchSoxlPrice() {
     const priceEl = document.getElementById('soxl-price');
     const timeEl  = document.getElementById('soxl-price-time');
@@ -1794,7 +1906,7 @@
   // - 매일 06:10(미장 마감) · 16:00(국장 마감) KST, 탭이 열려있는 동안
   // ══════════════════════════════════
   async function fetchAllPrices() {
-    await Promise.all([fetchPrice(), fetchSoxlPrice(), fetchAllPensionPrices()]);
+    await Promise.all([fetchPrice(), fetchSoxlPrice(), fetchAllPensionPrices(), fetchUsdKrwRate()]);
   }
 
   function getKstParts() {
