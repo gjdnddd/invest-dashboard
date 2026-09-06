@@ -1686,9 +1686,9 @@
     const fxTimeEl = document.getElementById('pension-fx-rate-time');
     if (fxTimeEl) fxTimeEl.textContent = fxTime ? new Date(fxTime).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준' : '';
 
-    const tonganH   = holdings.find(h => h.ticker === '390390');
+    const tonganH   = holdings.find(h => h.ticker === '157450');
     const usBondH   = holdings.find(h => h.ticker === '0046A0');
-    const tonganEval = tonganH ? tonganH.shares * (prices['390390'] || 0) : 0;
+    const tonganEval = tonganH ? tonganH.shares * (prices['157450'] || 0) : 0;
     const usBondEval = usBondH ? usBondH.shares * (prices['0046A0'] || 0) : 0;
     const fxPool     = tonganEval + usBondEval;
 
@@ -1712,7 +1712,7 @@
         </div>
         <div class="bg-[#0f172a] rounded-lg p-3">
           <div class="flex justify-between text-xs mb-1">
-            <span class="text-[#94a3b8]">단기통안채 (390390)</span>
+            <span class="text-[#94a3b8]">단기통안채 (157450)</span>
             <span>${fmtW(tonganEval)} / 목표 ${fmtW(targetTongan)}</span>
           </div>
           <div class="flex justify-end text-[10px] text-[#94a3b8]">${diffLabel(tonganEval - targetTongan)}</div>
