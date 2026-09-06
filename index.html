@@ -36,6 +36,7 @@
     <button id="tab-scroll-left" onclick="scrollTabs(-120)" class="hidden flex-shrink-0 px-2 text-[#64748b] hover:text-[#94a3b8] border-r border-[#334155] active:opacity-70">‹</button>
     <div id="tab-scroll-wrap" class="tab-scroll flex flex-1 overflow-x-auto">
       <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-blue-400 text-blue-400" data-tab="overview">전략현황</button>
+      <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="assets">자산현황</button>
       <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="alarm">알람</button>
       <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="tcc">TCC</button>
       <button class="tab-btn flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-[#64748b]" data-tab="scycle">S사이클</button>
@@ -461,6 +462,107 @@
           <p class="text-[10px] text-[#64748b] mb-2 font-medium">최근 기록</p>
           <div id="sheets-load-table" class="space-y-1.5"></div>
         </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════
+         자산현황 탭
+    ══════════════════════════════════ -->
+    <div id="tab-assets" class="tab-content hidden space-y-3">
+
+      <!-- 파일 업로드 -->
+      <div class="bg-[#1e293b] rounded-xl border border-[#334155] px-4 py-3">
+        <div class="flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-sm font-bold">자산현황</p>
+            <p class="text-[10px] text-[#64748b] mt-0.5 truncate" id="assets-file-status">meritz_history JSON 업로드 필요</p>
+          </div>
+          <label class="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-medium active:opacity-70 cursor-pointer">
+            업로드
+            <input type="file" accept="application/json,.json" id="assets-file-input" class="hidden" onchange="handleAssetsFileUpload(event)">
+          </label>
+        </div>
+      </div>
+
+      <div id="assets-content" class="hidden space-y-3">
+
+        <!-- 총자산 요약 -->
+        <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+          <div class="px-4 pt-4 pb-3">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-sm font-bold">총자산 요약</span>
+              <span class="text-[10px] text-[#94a3b8]" id="assets-date">--</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="bg-[#0f172a] rounded-lg p-3">
+                <p class="text-[10px] text-[#64748b] mb-1">총자산</p>
+                <p class="text-[13px] font-bold" id="assets-total">--</p>
+              </div>
+              <div class="bg-[#0f172a] rounded-lg p-3">
+                <p class="text-[10px] text-[#64748b] mb-1">투자자산</p>
+                <p class="text-[13px] font-bold" id="assets-invest-total">--</p>
+              </div>
+              <div class="bg-[#0f172a] rounded-lg p-3">
+                <p class="text-[10px] text-[#64748b] mb-1">비투자자산</p>
+                <p class="text-[13px] font-bold" id="assets-noninvest-total">--</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="bg-[#0f172a] rounded-lg p-3">
+                <p class="text-[10px] text-[#64748b] mb-1">미장 평가금</p>
+                <p class="text-xs font-medium" id="assets-us-stock">--</p>
+              </div>
+              <div class="bg-[#0f172a] rounded-lg p-3">
+                <p class="text-[10px] text-[#64748b] mb-1">국장 평가금</p>
+                <p class="text-xs font-medium" id="assets-kr-stock">--</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 계좌별 현황 -->
+        <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+          <div class="px-4 pt-4 pb-3">
+            <p class="text-sm font-bold mb-3">계좌별 현황</p>
+            <div id="assets-accounts-list" class="space-y-2"></div>
+          </div>
+        </div>
+
+        <!-- 환율 대응 -->
+        <div class="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+          <div class="px-4 pt-4 pb-3">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-sm font-bold">환율 대응</span>
+              <button onclick="withSpin(this, fetchUsdKrwRate)" class="text-xs bg-[#0f172a] text-[#94a3b8] px-2 py-1 rounded-lg border border-[#334155] active:opacity-70"><span class="inline-block">🔄</span> 환율 새로고침</button>
+            </div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-[10px] text-[#64748b] flex-shrink-0">USD/KRW</span>
+              <input type="number" id="assets-fx-rate-input" placeholder="0" min="0" step="1"
+                onchange="setUsdKrwRateManual(this.value)"
+                class="flex-1 bg-[#0f172a] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
+              <span class="text-[10px] text-[#64748b] flex-shrink-0" id="assets-fx-rate-time"></span>
+            </div>
+            <div class="bg-[#0f172a] rounded-lg p-3 mb-2 space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="text-[#94a3b8]">매칭 구간</span>
+                <span id="assets-fx-tier">--</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span class="text-[#94a3b8]">목표 비율 (달러:원화)</span>
+                <span id="assets-fx-ratio">--</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span class="text-[#94a3b8]">현재 비율 (달러:원화)</span>
+                <span id="assets-fx-actual-ratio">--</span>
+              </div>
+            </div>
+            <p class="text-[10px] text-[#64748b] mb-2 font-medium">현금성 자산 5분류 (현재 / 목표)</p>
+            <div class="space-y-2" id="assets-fx-compare"></div>
+            <p class="text-[10px] text-[#64748b] mt-2">※ 정보성 참고용 — 실제 환전·스위칭은 직접 판단·실행. RIA·한국투자증권·크립토/금·은행 계좌는 계산에서 제외</p>
+          </div>
+        </div>
+
       </div>
 
     </div>
@@ -1849,13 +1951,13 @@
   // 퇴직연금 환율 대응 (7단계 표 — 미국단기채ETF/단기통안채 비중)
   // ══════════════════════════════════
   const FX_TIERS = [
-    { rate: 1200, usBond: 80, tongan: 20 },
-    { rate: 1250, usBond: 70, tongan: 30 },
-    { rate: 1300, usBond: 60, tongan: 40 },
-    { rate: 1350, usBond: 50, tongan: 50 },
-    { rate: 1400, usBond: 40, tongan: 60 },
-    { rate: 1450, usBond: 30, tongan: 70 },
-    { rate: 1500, usBond: 20, tongan: 80 }
+    { rate: 1200, usdPct: 80, krwPct: 20, usBond: 80, tongan: 20, sgov: 0,   usdFx: 100 },
+    { rate: 1250, usdPct: 70, krwPct: 30, usBond: 70, tongan: 30, sgov: 20,  usdFx: 80  },
+    { rate: 1300, usdPct: 60, krwPct: 40, usBond: 60, tongan: 40, sgov: 30,  usdFx: 70  },
+    { rate: 1350, usdPct: 50, krwPct: 50, usBond: 50, tongan: 50, sgov: 50,  usdFx: 50  },
+    { rate: 1400, usdPct: 40, krwPct: 60, usBond: 40, tongan: 60, sgov: 70,  usdFx: 30  },
+    { rate: 1450, usdPct: 30, krwPct: 70, usBond: 30, tongan: 70, sgov: 80,  usdFx: 20  },
+    { rate: 1500, usdPct: 20, krwPct: 80, usBond: 20, tongan: 80, sgov: 100, usdFx: 0   }
   ];
   function matchFxTier(rate) {
     if (rate <= FX_TIERS[0].rate) return FX_TIERS[0];
@@ -1871,6 +1973,7 @@
       localStorage.setItem('usdkrw_rate', p);
       localStorage.setItem('usdkrw_rate_time', Date.now().toString());
       renderPensionTab();
+      renderAssetsTab();
     }
   }
 
@@ -1880,6 +1983,167 @@
     localStorage.setItem('usdkrw_rate', p.toString());
     localStorage.setItem('usdkrw_rate_time', Date.now().toString());
     renderPensionTab();
+    renderAssetsTab();
+  }
+
+  // ══════════════════════════════════
+  // 자산현황 (meritz_history JSON 업로드 — 저장 안 함, 매번 업로드)
+  // ══════════════════════════════════
+  const ASSETS_EXCLUDE_NAMES = ['RIA', '한국투자증권', '업비트', '바이낸스', '미래 금현물', '신한은행'];
+  const ASSETS_TONGAN_NAME   = 'TIGER 단기통안채';
+  const ASSETS_USBOND_NAME   = 'TIGER 미국초단기(3개월이하)국채';
+
+  let assetsSnapshot = null;
+
+  function handleAssetsFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const arr = JSON.parse(reader.result);
+        if (!Array.isArray(arr) || !arr.length) throw new Error('empty');
+        assetsSnapshot = [...arr].sort((a, b) => a.date.localeCompare(b.date)).at(-1);
+        renderAssetsTab();
+      } catch (e) {
+        alert('JSON 파일을 읽을 수 없습니다.');
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  function computeAssetsHoldingsMap(snapshot) {
+    const map = {};
+    (snapshot.holdings || []).forEach(h => {
+      if (h.name !== ASSETS_TONGAN_NAME && h.name !== ASSETS_USBOND_NAME) return;
+      if (!map[h.acct]) map[h.acct] = { tongan: 0, usBond: 0 };
+      if (h.name === ASSETS_TONGAN_NAME) map[h.acct].tongan += h.ev;
+      else map[h.acct].usBond += h.ev;
+    });
+    return map;
+  }
+
+  function renderAssetsTab() {
+    const statusEl  = document.getElementById('assets-file-status');
+    const contentEl = document.getElementById('assets-content');
+    if (!statusEl || !contentEl) return;
+    if (!assetsSnapshot) {
+      statusEl.textContent = 'meritz_history JSON 업로드 필요';
+      contentEl.classList.add('hidden');
+      return;
+    }
+    contentEl.classList.remove('hidden');
+    statusEl.textContent = assetsSnapshot.date + ' 기준 데이터 로드됨';
+
+    const fmtW = v => '₩' + Math.round(v).toLocaleString('ko-KR');
+    const s = assetsSnapshot;
+
+    document.getElementById('assets-date').textContent          = s.date;
+    document.getElementById('assets-total').textContent         = fmtW(s.totalAsset || 0);
+    document.getElementById('assets-invest-total').textContent  = fmtW(s.investTotal || 0);
+    document.getElementById('assets-noninvest-total').textContent = fmtW(s.nonInvestTotal || 0);
+    document.getElementById('assets-us-stock').textContent      = fmtW(s.investUsStock || 0);
+    document.getElementById('assets-kr-stock').textContent      = fmtW(s.investKrStock || 0);
+
+    const holdingsMap = computeAssetsHoldingsMap(s);
+    const accounts = s.accounts || [];
+
+    // 계좌별 리스트
+    const listEl = document.getElementById('assets-accounts-list');
+    listEl.innerHTML = accounts.length ? accounts.map(a => {
+      const label = a.alias || a.name || a.key;
+      const excluded = ASSETS_EXCLUDE_NAMES.includes(label);
+      return `
+        <div class="bg-[#0f172a] rounded-lg p-3">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-medium">${label}</span>
+            ${excluded ? '<span class="text-[9px] text-[#64748b] bg-[#1e293b] border border-[#334155] px-1.5 py-0.5 rounded">계산 제외</span>' : ''}
+          </div>
+          <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+            <div class="flex justify-between"><span class="text-[#64748b]">국내주식</span><span>${fmtW(a.krStock || 0)}</span></div>
+            <div class="flex justify-between"><span class="text-[#64748b]">미국주식</span><span>${fmtW(a.usStock || 0)}</span></div>
+            <div class="flex justify-between"><span class="text-[#64748b]">SGOV</span><span>${fmtW(a.sgovVal || 0)}</span></div>
+            <div class="flex justify-between"><span class="text-[#64748b]">원화예수금</span><span>${fmtW(a.krwDep || 0)}</span></div>
+            <div class="flex justify-between"><span class="text-[#64748b]">달러예수금</span><span>${fmtW(a.fxDepKrw || 0)}</span></div>
+            <div class="flex justify-between"><span class="text-[#64748b]">합계</span><span class="font-medium">${fmtW(a.total || 0)}</span></div>
+          </div>
+        </div>`;
+    }).join('') : '<p class="text-[10px] text-[#64748b] text-center py-3">계좌 데이터 없음</p>';
+
+    // 5분류 현금성 자산 집계 (제외 계좌 빼고, 단기통안채/미국채는 holdings 이름 매칭으로 krwDep에서 분리)
+    let sgov = 0, fxUsdKrw = 0, tongan = 0, usBond = 0, krwCash = 0;
+    accounts.forEach(a => {
+      const label = a.alias || a.name || a.key;
+      if (ASSETS_EXCLUDE_NAMES.includes(label)) return;
+      const hm = holdingsMap[a.key] || { tongan: 0, usBond: 0 };
+      sgov    += a.sgovVal || 0;
+      fxUsdKrw += a.fxDepKrw || 0;
+      tongan  += hm.tongan;
+      usBond  += hm.usBond;
+      krwCash += (a.krwDep || 0) - hm.tongan - hm.usBond;
+    });
+    const usdSidePool = sgov + fxUsdKrw;
+    const krwSidePool = tongan + usBond + krwCash;
+    const fxPool = usdSidePool + krwSidePool;
+
+    // 환율 대응
+    const fxRate = getUsdKrwRate();
+    const fxRateInput = document.getElementById('assets-fx-rate-input');
+    if (fxRateInput && !fxRateInput.matches(':focus')) fxRateInput.value = fxRate > 0 ? fxRate : '';
+    const fxTime = parseInt(localStorage.getItem('usdkrw_rate_time') || '0');
+    const fxTimeEl = document.getElementById('assets-fx-rate-time');
+    if (fxTimeEl) fxTimeEl.textContent = fxTime ? new Date(fxTime).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준' : '';
+
+    const tierEl        = document.getElementById('assets-fx-tier');
+    const ratioEl        = document.getElementById('assets-fx-ratio');
+    const actualRatioEl  = document.getElementById('assets-fx-actual-ratio');
+    const compareEl      = document.getElementById('assets-fx-compare');
+    if (fxPool > 0) {
+      actualRatioEl.textContent = (usdSidePool / fxPool * 100).toFixed(0) + '% : ' + (krwSidePool / fxPool * 100).toFixed(0) + '%';
+    } else {
+      actualRatioEl.textContent = '--';
+    }
+    if (fxRate > 0 && fxPool > 0) {
+      const tier = matchFxTier(fxRate);
+      tierEl.textContent  = tier.rate.toLocaleString('ko-KR') + '원 구간';
+      ratioEl.textContent = tier.usdPct + '% : ' + tier.krwPct + '%';
+
+      const targetSgov    = usdSidePool * tier.sgov   / 100;
+      const targetFx      = usdSidePool * tier.usdFx  / 100;
+      const targetUsBond  = krwSidePool * tier.usBond / 100;
+      const targetTongan  = krwSidePool * tier.tongan / 100;
+
+      const diffLabel = (cur, tgt) => {
+        const d = cur - tgt;
+        if (Math.abs(d) < 1) return '±0';
+        return d > 0 ? `초과 ${fmtW(d)}` : `부족 ${fmtW(-d)}`;
+      };
+      const row = (label, cur, tgt) => `
+        <div class="bg-[#0f172a] rounded-lg p-3">
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-[#94a3b8]">${label}</span>
+            <span>${fmtW(cur)} / 목표 ${fmtW(tgt)}</span>
+          </div>
+          <div class="flex justify-end text-[10px] text-[#94a3b8]">${diffLabel(cur, tgt)}</div>
+        </div>`;
+      compareEl.innerHTML =
+        row('SGOV (달러)', sgov, targetSgov) +
+        row('예수금 달러 (외화RP)', fxUsdKrw, targetFx) +
+        row('미국채 (원화)', usBond, targetUsBond) +
+        row('단기통안채 (원화)', tongan, targetTongan) +
+        `<div class="bg-[#0f172a] rounded-lg p-3">
+           <div class="flex justify-between text-xs">
+             <span class="text-[#94a3b8]">원화 예수금 (미배분)</span>
+             <span>${fmtW(krwCash)}</span>
+           </div>
+           <p class="text-[9px] text-[#64748b] mt-1">미국채·단기통안채로 아직 편입되지 않은 원화 현금 — 위 두 종목 비중대로 편입 대상</p>
+         </div>`;
+    } else {
+      tierEl.textContent  = '--';
+      ratioEl.textContent = '--';
+      compareEl.innerHTML = `<p class="text-[10px] text-[#64748b] text-center py-3">${fxPool > 0 ? '환율을 먼저 조회해주세요' : '현금성 자산 데이터가 없습니다'}</p>`;
+    }
   }
 
   async function fetchSoxlPrice() {
