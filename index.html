@@ -541,7 +541,7 @@
               <input type="number" id="assets-fx-rate-input" placeholder="0" min="0" step="1"
                 onchange="setUsdKrwRateManual(this.value)"
                 class="flex-1 bg-[#0f172a] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
-              <span class="text-[10px] text-[#64748b] flex-shrink-0" id="assets-fx-rate-time"></span>
+              <span class="text-[10px] text-[#64748b] text-right max-w-[50%]" id="assets-fx-rate-time"></span>
             </div>
 
             <p class="text-[10px] text-[#64748b] mb-2 font-medium">전략 확정 배정 (달러 그대로 예약 — 환율표 대상 제외)</p>
@@ -930,6 +930,7 @@
             <span class="text-sm font-bold">퇴직연금 현황</span>
             <button onclick="withSpin(this, fetchAllPensionPrices)" class="text-xs bg-[#0f172a] text-[#94a3b8] px-2 py-1 rounded-lg border border-[#334155] active:opacity-70"><span class="inline-block">🔄</span> 전체 새로고침</button>
           </div>
+          <p id="pension-price-summary" class="text-[10px] text-[#64748b] -mt-1.5 mb-3"></p>
           <div class="grid grid-cols-3 gap-2">
             <div class="bg-[#0f172a] rounded-lg p-3">
               <p class="text-[10px] text-[#64748b] mb-1">총 시드</p>
@@ -1034,7 +1035,7 @@
             <input type="number" id="pension-fx-rate-input" placeholder="0" min="0" step="1"
               onchange="setUsdKrwRateManual(this.value)"
               class="flex-1 bg-[#0f172a] border border-[#334155] rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500">
-            <span class="text-[10px] text-[#64748b] flex-shrink-0" id="pension-fx-rate-time"></span>
+            <span class="text-[10px] text-[#64748b] text-right max-w-[50%]" id="pension-fx-rate-time"></span>
           </div>
           <div class="bg-[#0f172a] rounded-lg p-3 mb-2">
             <div class="flex justify-between text-xs mb-1">
@@ -1427,7 +1428,60 @@
   // 미장: Finnhub → Yahoo(프록시) → Stooq(프록시)
   // 국장: Finnhub → 네이버 JSON API(codetabs) → Yahoo(프록시)
   // ══════════════════════════════════
+  // 가격 갱신 기록 (기기별 localStorage 'price_times') — key: tqqq / soxl / fx / p:<티커>
+  //   ok: 마지막 성공 시각, fail: 마지막 시도가 실패면 그 시각(성공하면 0),
+  //   manual: 수동입력, cache: 서버캐시로 받았을 때 캐시 기준시각(-1=시각 불명)
+  const quoteSrc = {};
+  function getPriceTimes() {
+    try { return JSON.parse(localStorage.getItem('price_times') || '{}'); } catch (_) { return {}; }
+  }
+  function markPriceResult(key, ok, opts = {}) {
+    const t = getPriceTimes();
+    const prev = t[key] || {};
+    const now = Date.now();
+    t[key] = ok
+      ? { ok: now, fail: 0, manual: opts.manual ? 1 : 0, cache: opts.cacheAsOf || 0 }
+      : { ok: prev.ok || 0, fail: now, manual: prev.manual || 0, cache: prev.cache || 0 };
+    try { localStorage.setItem('price_times', JSON.stringify(t)); } catch (_) {}
+  }
+  function markQuote(key, symbol, type) {
+    const s = quoteSrc[type + ':' + symbol];
+    markPriceResult(key, true, s ? { cacheAsOf: s.asOf > 0 ? s.asOf : -1 } : {});
+  }
+  function fmtPriceTime(ms) {
+    return new Date(ms).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+  const PRICE_LEVEL_CLASS = { ok: 'text-[#94a3b8]', warn: 'text-amber-400', bad: 'text-red-400', none: 'text-[#64748b]' };
+  function priceStatus(key) {
+    const r = getPriceTimes()[key];
+    if (!r || (!r.ok && !r.fail)) return { text: '갱신 기록 없음', level: 'none' };
+    if (r.fail) {
+      return { text: '⚠ 갱신 실패 ' + fmtPriceTime(r.fail) + (r.ok ? ' · 마지막 성공 ' + fmtPriceTime(r.ok) : ''), level: 'bad' };
+    }
+    if (r.manual) return { text: fmtPriceTime(r.ok) + ' 수동입력', level: 'ok' };
+    if (r.cache) {
+      return { text: '서버캐시 ' + (r.cache > 0 ? fmtPriceTime(r.cache) + ' 기준' : '시각 불명') + ' (직접 조회 실패)', level: 'warn' };
+    }
+    return { text: fmtPriceTime(r.ok) + ' 기준', level: 'ok' };
+  }
+  function paintPriceTime(key, elId) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const s = priceStatus(key);
+    el.textContent = s.text;
+    Object.values(PRICE_LEVEL_CLASS).forEach(c => el.classList.remove(c));
+    el.classList.add(PRICE_LEVEL_CLASS[s.level]);
+  }
+  function paintFxTime(elId) {
+    if (getPriceTimes().fx) { paintPriceTime('fx', elId); return; }
+    const el = document.getElementById(elId);
+    const t = parseInt(localStorage.getItem('usdkrw_rate_time') || '0');
+    if (el) el.textContent = t ? fmtPriceTime(t) + ' 기준' : '';
+  }
+
   async function fetchQuote(symbol, type = 'us') {
+    const qk = type + ':' + symbol;
+    delete quoteSrc[qk];
     const finnhubKey = localStorage.getItem('finnhub_key') || '';
     const yahooSym   = type === 'kr' ? symbol + '.KS' : symbol;
     const yahooBase  = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSym}?interval=1d&range=1d`;
@@ -1487,7 +1541,10 @@
     // 5. 서버 캐시 (GitHub Actions, 매일 06:10·16:00 KST 자동 수집)
     const serverData = await getServerPrices();
     const serverP = serverData?.[type === 'kr' ? 'pension' : 'us']?.[symbol];
-    if (serverP > 0) return serverP;
+    if (serverP > 0) {
+      quoteSrc[qk] = { src: 'cache', asOf: Date.parse(serverData.updated) || 0 };
+      return serverP;
+    }
 
     return null;
   }
@@ -1519,14 +1576,16 @@
     if (p !== null) {
       localStorage.setItem('tcc_tqqq_price', p);
       priceEl.textContent = '$' + p.toFixed(2);
-      timeEl.textContent  = new Date().toLocaleString('ko-KR',
-        { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준';
+      markQuote('tqqq', 'TQQQ', 'us');
+      paintPriceTime('tqqq', 'tqqq-price-time');
       renderTccTab();
       if (vrGistData)    renderVrCard(vrGistData);
       if (mumaeGistData) renderMumaeCard(mumaeGistData);
     } else {
       priceEl.textContent = 'fetch 실패';
-      timeEl.textContent  = '직접입력 버튼으로 수동 입력 가능';
+      markPriceResult('tqqq', false);
+      paintPriceTime('tqqq', 'tqqq-price-time');
+      timeEl.textContent += ' · 직접입력 가능';
     }
   }
 
@@ -1544,16 +1603,16 @@
     if (type === 'tqqq') {
       localStorage.setItem('tcc_tqqq_price', val);
       document.getElementById('tqqq-price').textContent = '$' + val.toFixed(2);
-      document.getElementById('tqqq-price-time').textContent = new Date().toLocaleString('ko-KR',
-        { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 수동입력';
+      markPriceResult('tqqq', true, { manual: true });
+      paintPriceTime('tqqq', 'tqqq-price-time');
       renderTccTab();
       if (vrGistData)    renderVrCard(vrGistData);
       if (mumaeGistData) renderMumaeCard(mumaeGistData);
     } else if (type === 'soxl') {
       localStorage.setItem('sc_soxl_price', val);
       document.getElementById('soxl-price').textContent = '$' + val.toFixed(2);
-      document.getElementById('soxl-price-time').textContent = new Date().toLocaleString('ko-KR',
-        { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 수동입력';
+      markPriceResult('soxl', true, { manual: true });
+      paintPriceTime('soxl', 'soxl-price-time');
       renderScTab();
     }
     document.getElementById(type + '-manual-wrap').classList.add('hidden');
@@ -1715,6 +1774,28 @@
       pnlEl.className = 'text-[13px] font-bold ' + (pnl >= 0 ? 'text-green-400' : 'text-red-400');
     }
 
+    // 가격 갱신 요약
+    const summaryEl = document.getElementById('pension-price-summary');
+    if (summaryEl) {
+      const times  = getPriceTimes();
+      const recs   = holdings.filter(h => h.ticker).map(h => times['p:' + h.ticker] || {});
+      const failN  = recs.filter(r => r.fail).length;
+      const cacheN = recs.filter(r => !r.fail && r.cache).length;
+      const okN    = recs.filter(r => !r.fail && r.ok).length;
+      const lastOk = Math.max(0, ...recs.map(r => r.ok || 0));
+      let text  = '가격 갱신 기록 없음 — 🔄 전체 새로고침으로 조회하세요';
+      let level = 'none';
+      if (lastOk > 0 || failN > 0) {
+        text = '가격 ' + (lastOk > 0 ? fmtPriceTime(lastOk) + ' 갱신' : '성공 기록 없음') + ' · ' + okN + '/' + recs.length + '종목 정상';
+        if (cacheN) text += ' · 서버캐시 ' + cacheN;
+        if (failN)  text += ' · ⚠ 실패 ' + failN;
+        level = failN ? 'bad' : cacheN ? 'warn' : 'ok';
+      }
+      summaryEl.textContent = text;
+      Object.values(PRICE_LEVEL_CLASS).forEach(c => summaryEl.classList.remove(c));
+      summaryEl.classList.add(PRICE_LEVEL_CLASS[level]);
+    }
+
     // 종목별 리스트
     const listEl = document.getElementById('pension-holdings-list');
     listEl.innerHTML = holdings.length ? holdings.map((h, i) => {
@@ -1722,6 +1803,7 @@
       const ev     = h.shares * price;
       const avgP   = h.avg_price || 0;
       const pnlH   = (avgP > 0 && price > 0) ? (price / avgP - 1) * 100 : null;
+      const ps     = priceStatus('p:' + h.ticker);
       return `
         <div class="bg-[#0f172a] rounded-lg p-3">
           <div class="flex items-center justify-between mb-2">
@@ -1743,6 +1825,7 @@
               <input type="number" value="${price > 0 ? price : ''}" min="0" placeholder="직접입력"
                 onchange="setPensionPriceManual('${h.ticker}', this.value)"
                 class="w-full bg-[#1e293b] border border-[#334155] rounded px-1.5 py-1 text-xs text-white outline-none focus:border-blue-500">
+              ${h.ticker ? `<p class="text-[10px] mt-0.5 ${PRICE_LEVEL_CLASS[ps.level]}">${ps.text}</p>` : ''}
             </div>
             <div>
               <p class="text-[10px] text-[#64748b] mb-0.5">매수가</p>
@@ -1813,9 +1896,7 @@
     const fxRate = getUsdKrwRate();
     const fxRateInput = document.getElementById('pension-fx-rate-input');
     if (fxRateInput && !fxRateInput.matches(':focus')) fxRateInput.value = fxRate > 0 ? fxRate : '';
-    const fxTime = parseInt(localStorage.getItem('usdkrw_rate_time') || '0');
-    const fxTimeEl = document.getElementById('pension-fx-rate-time');
-    if (fxTimeEl) fxTimeEl.textContent = fxTime ? new Date(fxTime).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준' : '';
+    paintFxTime('pension-fx-rate-time');
 
     const tonganH   = holdings.find(h => h.ticker === '157450');
     const usBondH   = holdings.find(h => h.ticker === '0046A0');
@@ -1958,8 +2039,11 @@
       const prices = getPensionPrices();
       prices[ticker] = p;
       localStorage.setItem('pension_prices', JSON.stringify(prices));
-      renderPensionTab();
+      markQuote('p:' + ticker, ticker, 'kr');
+    } else {
+      markPriceResult('p:' + ticker, false);
     }
+    renderPensionTab();
   }
 
   function setPensionPriceManual(ticker, value) {
@@ -1968,6 +2052,7 @@
     const prices = getPensionPrices();
     prices[ticker] = p;
     localStorage.setItem('pension_prices', JSON.stringify(prices));
+    markPriceResult('p:' + ticker, true, { manual: true });
     renderPensionTab();
   }
 
@@ -2001,9 +2086,12 @@
     if (p !== null) {
       localStorage.setItem('usdkrw_rate', p);
       localStorage.setItem('usdkrw_rate_time', Date.now().toString());
-      renderPensionTab();
-      renderAssetsTab();
+      markQuote('fx', 'KRW=X', 'us');
+    } else {
+      markPriceResult('fx', false);
     }
+    renderPensionTab();
+    renderAssetsTab();
   }
 
   function setUsdKrwRateManual(value) {
@@ -2011,6 +2099,7 @@
     if (!p || p <= 0) return;
     localStorage.setItem('usdkrw_rate', p.toString());
     localStorage.setItem('usdkrw_rate_time', Date.now().toString());
+    markPriceResult('fx', true, { manual: true });
     renderPensionTab();
     renderAssetsTab();
   }
@@ -2131,9 +2220,7 @@
     const fxRate = getUsdKrwRate();
     const fxRateInput = document.getElementById('assets-fx-rate-input');
     if (fxRateInput && !fxRateInput.matches(':focus')) fxRateInput.value = fxRate > 0 ? fxRate : '';
-    const fxTime = parseInt(localStorage.getItem('usdkrw_rate_time') || '0');
-    const fxTimeEl = document.getElementById('assets-fx-rate-time');
-    if (fxTimeEl) fxTimeEl.textContent = fxTime ? new Date(fxTime).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준' : '';
+    paintFxTime('assets-fx-rate-time');
 
     const reservedKrw = reservedUsd * (fxRate || 0);
     const reservedTotalEl = document.getElementById('assets-reserved-total');
@@ -2218,12 +2305,14 @@
     if (p !== null) {
       localStorage.setItem('sc_soxl_price', p);
       priceEl.textContent = '$' + p.toFixed(2);
-      timeEl.textContent  = new Date().toLocaleString('ko-KR',
-        { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준';
+      markQuote('soxl', 'SOXL', 'us');
+      paintPriceTime('soxl', 'soxl-price-time');
       renderScTab();
     } else {
       priceEl.textContent = 'fetch 실패';
-      timeEl.textContent  = '직접입력 버튼으로 수동 입력 가능';
+      markPriceResult('soxl', false);
+      paintPriceTime('soxl', 'soxl-price-time');
+      timeEl.textContent += ' · 직접입력 가능';
     }
   }
 
@@ -3363,12 +3452,12 @@ function doGet(e) {
     const cachedTqqq = localStorage.getItem('tcc_tqqq_price');
     if (cachedTqqq) {
       document.getElementById('tqqq-price').textContent = '$' + parseFloat(cachedTqqq).toFixed(2);
-      document.getElementById('tqqq-price-time').textContent = '캐시된 가격 (새로고침 권장)';
+      paintPriceTime('tqqq', 'tqqq-price-time');
     }
     const cachedSoxl = localStorage.getItem('sc_soxl_price');
     if (cachedSoxl) {
       document.getElementById('soxl-price').textContent = '$' + parseFloat(cachedSoxl).toFixed(2);
-      document.getElementById('soxl-price-time').textContent = '캐시된 가격 (새로고침 권장)';
+      paintPriceTime('soxl', 'soxl-price-time');
     }
 
     document.getElementById('last-updated').textContent =
