@@ -1482,19 +1482,27 @@
     if (el) el.textContent = t ? fmtPriceTime(t) + ' 기준' : '';
   }
 
+  // 응답 없는 무료 프록시에 매달리지 않도록 호출마다 시간 제한을 둔다 (초과 시 AbortError → 다음 경로)
+  function fetchT(url, opts = {}, ms = 6000) {
+    const ctl   = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), ms);
+    return fetch(url, { ...opts, signal: ctl.signal }).finally(() => clearTimeout(timer));
+  }
+
   async function fetchQuote(symbol, type = 'us') {
     const qk = type + ':' + symbol;
     delete quoteSrc[qk];
     const finnhubKey = localStorage.getItem('finnhub_key') || '';
     const yahooSym   = type === 'kr' ? symbol + '.KS' : symbol;
     const yahooBase  = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSym}?interval=1d&range=1d`;
-    const proxies    = ['https://corsproxy.io/?', 'https://api.allorigins.win/raw?url='];
+    // corsproxy.io는 익명 사용을 중단해 항상 403이므로 제외
+    const proxies    = ['https://api.allorigins.win/raw?url='];
 
     // 1. Finnhub (직접 — 프록시 없이 PC·모바일 모두 안정)
     if (finnhubKey) {
       try {
         const sym  = type === 'kr' ? `KRX:${symbol}` : symbol;
-        const res  = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${finnhubKey}`, { cache: 'no-store' });
+        const res  = await fetchT(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${finnhubKey}`, { cache: 'no-store' });
         const data = await res.json();
         const p    = data.c > 0 ? data.c : data.pc;
         if (p > 0) return p;
@@ -1505,7 +1513,7 @@
     if (type === 'kr') {
       try {
         const url  = `https://m.stock.naver.com/api/stock/${symbol}/basic`;
-        const res  = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url), { cache: 'no-store' });
+        const res  = await fetchT('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url), { cache: 'no-store' });
         const data = await res.json();
         const p    = parseFloat((data.closePrice || data.currentPrice || '').replace(/,/g, ''));
         if (p > 0) return p;
@@ -1515,7 +1523,7 @@
     // 3. Yahoo Finance via 프록시
     for (const px of proxies) {
       try {
-        const res  = await fetch(px + encodeURIComponent(yahooBase), { cache: 'no-store' });
+        const res  = await fetchT(px + encodeURIComponent(yahooBase), { cache: 'no-store' });
         const data = await res.json();
         const p    = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
         if (p > 0) return p;
@@ -1527,7 +1535,7 @@
       const stooqBase = `https://stooq.com/q/l/?s=${symbol.toLowerCase()}.us&f=sd2t2ohlcv&e=csv`;
       for (const px of proxies) {
         try {
-          const res  = await fetch(px + encodeURIComponent(stooqBase), { cache: 'no-store' });
+          const res  = await fetchT(px + encodeURIComponent(stooqBase), { cache: 'no-store' });
           const text = await res.text();
           for (const line of text.trim().split('\n')) {
             if (/symbol|date/i.test(line)) continue;
@@ -1552,19 +1560,22 @@
     return null;
   }
 
-  // 알람 Gist의 dashboard_prices.json (서버 자동수집분) — 세션당 1회만 조회
-  let serverPriceCache = null;
-  async function getServerPrices() {
-    if (serverPriceCache !== null) return serverPriceCache;
-    try {
-      const gistId = localStorage.getItem('gist_id') || '';
-      if (!gistId) { serverPriceCache = {}; return serverPriceCache; }
-      const res  = await fetch(`https://api.github.com/gists/${gistId}`, { cache: 'no-store' });
-      const json = await res.json();
-      const file = json?.files?.['dashboard_prices.json'];
-      serverPriceCache = file ? JSON.parse(file.content) : {};
-    } catch (_) { serverPriceCache = {}; }
-    return serverPriceCache;
+  // 알람 Gist의 dashboard_prices.json (서버 자동수집분) — 세션당 1회만 조회, 동시 호출은 같은 요청을 공유
+  let serverPricePromise = null;
+  function getServerPrices() {
+    if (!serverPricePromise) {
+      serverPricePromise = (async () => {
+        try {
+          const gistId = localStorage.getItem('gist_id') || '';
+          if (!gistId) return {};
+          const res  = await fetchT(`https://api.github.com/gists/${gistId}`, { cache: 'no-store' });
+          const json = await res.json();
+          const file = json?.files?.['dashboard_prices.json'];
+          return file ? JSON.parse(file.content) : {};
+        } catch (_) { return {}; }
+      })();
+    }
+    return serverPricePromise;
   }
 
   // ══════════════════════════════════
@@ -2060,8 +2071,8 @@
   }
 
   async function fetchAllPensionPrices() {
-    const holdings = getPensionHoldings();
-    for (const h of holdings) { if (h.ticker) await fetchPensionPrice(h.ticker); }
+    const tickers = [...new Set(getPensionHoldings().map(h => h.ticker).filter(Boolean))];
+    await Promise.all(tickers.map(t => fetchPensionPrice(t)));
   }
 
   // ══════════════════════════════════
