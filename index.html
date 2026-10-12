@@ -476,12 +476,15 @@
         <div class="flex items-center justify-between gap-2">
           <div class="min-w-0">
             <p class="text-sm font-bold">자산현황</p>
-            <p class="text-[10px] text-[#64748b] mt-0.5 truncate" id="assets-file-status">meritz_history JSON 업로드 필요</p>
+            <p class="text-[10px] text-[#64748b] mt-0.5" id="assets-file-status">meritz_history JSON 업로드 필요</p>
           </div>
-          <label class="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-medium active:opacity-70 cursor-pointer">
-            업로드
-            <input type="file" accept="application/json,.json" id="assets-file-input" class="hidden" onchange="handleAssetsFileUpload(event)">
-          </label>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <button id="assets-clear-btn" onclick="clearAssetsSnapshot()" class="hidden text-xs bg-[#0f172a] text-[#94a3b8] px-3 py-2 rounded-lg border border-[#334155] active:opacity-70">지우기</button>
+            <label class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-medium active:opacity-70 cursor-pointer">
+              업로드
+              <input type="file" accept="application/json,.json" id="assets-file-input" class="hidden" onchange="handleAssetsFileUpload(event)">
+            </label>
+          </div>
         </div>
       </div>
 
@@ -2111,7 +2114,28 @@
   const ASSETS_TONGAN_NAME   = 'TIGER 단기통안채';
   const ASSETS_USBOND_NAME   = 'TIGER 미국초단기(3개월이하)국채';
 
+  // 업로드한 최신 스냅샷 1건만 이 기기 localStorage('assets_snapshot')에 보관한다.
+  // Gist/GitHub로는 동기화하지 않는다 (pushInvestData 대상 키가 아님).
   let assetsSnapshot = null;
+  let assetsSavedAt  = 0;
+
+  function loadAssetsSnapshot() {
+    try {
+      const s = JSON.parse(localStorage.getItem('assets_snapshot') || 'null');
+      if (s && s.snapshot && s.snapshot.date) {
+        assetsSnapshot = s.snapshot;
+        assetsSavedAt  = s.saved || 0;
+      }
+    } catch (_) {}
+  }
+
+  function clearAssetsSnapshot() {
+    if (!confirm('이 기기에 보관된 자산현황 데이터를 지울까요?')) return;
+    try { localStorage.removeItem('assets_snapshot'); } catch (_) {}
+    assetsSnapshot = null;
+    assetsSavedAt  = 0;
+    renderAssetsTab();
+  }
 
   function handleAssetsFileUpload(event) {
     const file = event.target.files[0];
@@ -2122,6 +2146,12 @@
         const arr = JSON.parse(reader.result);
         if (!Array.isArray(arr) || !arr.length) throw new Error('empty');
         assetsSnapshot = [...arr].sort((a, b) => a.date.localeCompare(b.date)).at(-1);
+        assetsSavedAt  = Date.now();
+        try {
+          localStorage.setItem('assets_snapshot', JSON.stringify({ saved: assetsSavedAt, snapshot: assetsSnapshot }));
+        } catch (_) {
+          showToast('⚠️ 기기에 보관하지 못했습니다 · 이번 접속에서만 유지됩니다', 'error', { tag: 'assets-save-fail' });
+        }
         renderAssetsTab();
       } catch (e) {
         alert('JSON 파일을 읽을 수 없습니다.');
@@ -2146,13 +2176,16 @@
     const statusEl  = document.getElementById('assets-file-status');
     const contentEl = document.getElementById('assets-content');
     if (!statusEl || !contentEl) return;
+    const clearBtn = document.getElementById('assets-clear-btn');
+    if (clearBtn) clearBtn.classList.toggle('hidden', !assetsSnapshot);
     if (!assetsSnapshot) {
       statusEl.textContent = 'meritz_history JSON 업로드 필요';
       contentEl.classList.add('hidden');
       return;
     }
     contentEl.classList.remove('hidden');
-    statusEl.textContent = assetsSnapshot.date + ' 기준 데이터 로드됨';
+    statusEl.textContent = assetsSnapshot.date + ' 기준 · 이 기기에 보관됨'
+      + (assetsSavedAt ? ' (' + fmtPriceTime(assetsSavedAt) + ' 업로드)' : '');
 
     const fmtW = v => '₩' + Math.round(v).toLocaleString('ko-KR');
     const s = assetsSnapshot;
@@ -3490,6 +3523,8 @@ function doGet(e) {
     renderPensionTab();
     renderKstockTab();
     renderOverviewConfig();
+    loadAssetsSnapshot();
+    renderAssetsTab();
 
     // 접속 시 가격 자동 새로고침 (백그라운드) — 완료 후 오늘 지난 슬롯은 완료 처리(중복 fetch 방지)
     fetchAllPrices().then(markPastSlotsCoveredToday);
