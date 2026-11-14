@@ -942,6 +942,7 @@
             <button onclick="withSpin(this, fetchAllPensionPrices)" class="text-xs bg-[#0f172a] text-[#94a3b8] px-2 py-1 rounded-lg border border-[#334155] active:opacity-70"><span class="inline-block">🔄</span> 전체 새로고침</button>
           </div>
           <p id="pension-price-summary" class="text-[10px] text-[#64748b] -mt-1.5 mb-3"></p>
+          <p id="pension-stale-warn" class="hidden text-[13px] font-bold text-amber-400 -mt-1.5 mb-3"></p>
           <div class="grid grid-cols-2 gap-2">
             <div class="bg-[#0f172a] rounded-lg p-3">
               <p class="text-[10px] text-[#64748b] mb-1">최초시드</p>
@@ -1477,11 +1478,23 @@
     if (r.fail) {
       return { text: '⚠ 갱신 실패 ' + fmtPriceTime(r.fail) + (r.ok ? ' · 마지막 성공 ' + fmtPriceTime(r.ok) : ''), level: 'bad' };
     }
-    if (r.manual) return { text: fmtPriceTime(r.ok) + ' 수동입력', level: 'ok' };
+    const stale = isPriceStale(r);
+    const staleTxt = stale ? ' · ⚠ 오래됨' : '';
+    if (r.manual) return { text: fmtPriceTime(r.ok) + ' 수동입력' + staleTxt, level: stale ? 'warn' : 'ok' };
     if (r.cache) {
-      return { text: '서버캐시 ' + (r.cache > 0 ? fmtPriceTime(r.cache) + ' 기준' : '시각 불명') + ' (직접 조회 실패)', level: 'warn' };
+      return { text: '서버캐시 ' + (r.cache > 0 ? fmtPriceTime(r.cache) + ' 기준' : '시각 불명') + staleTxt, level: stale || r.cache < 0 ? 'warn' : 'ok' };
     }
-    return { text: fmtPriceTime(r.ok) + ' 기준', level: 'ok' };
+    return { text: fmtPriceTime(r.ok) + ' 기준' + staleTxt, level: stale ? 'warn' : 'ok' };
+  }
+  // 가격 기준 시각: 서버캐시면 캐시 기준시각, 아니면 마지막 성공 시각
+  function priceAsOf(r) {
+    if (!r) return 0;
+    return r.cache > 0 ? r.cache : (r.ok || 0);
+  }
+  const PRICE_STALE_MS = 4 * 24 * 60 * 60 * 1000;   // 4일(주말 포함 약 3영업일) 이상이면 오래된 가격
+  function isPriceStale(r) {
+    const t = priceAsOf(r);
+    return t > 0 && Date.now() - t > PRICE_STALE_MS;
   }
   function paintPriceTime(key, elId) {
     const el = document.getElementById(elId);
@@ -1513,6 +1526,17 @@
     const yahooBase  = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSym}?interval=1d&range=1d`;
     // corsproxy.io는 익명 사용을 중단해 항상 403이므로 제외
     const proxies    = ['https://api.allorigins.win/raw?url='];
+
+    // 0. 국장: 서버 캐시가 신선하면(20시간 이내) 무료 프록시보다 먼저 사용
+    if (type === 'kr') {
+      const sd = await getServerPrices();
+      const sp = validPrice(sd?.pension?.[symbol]);
+      const asOf = Date.parse(sd?.updated) || 0;
+      if (sp && asOf > 0 && Date.now() - asOf < 20 * 60 * 60 * 1000) {
+        quoteSrc[qk] = { src: 'cache', asOf };
+        return sp;
+      }
+    }
 
     // 1. Finnhub (직접 — 프록시 없이 PC·모바일 모두 안정)
     if (finnhubKey) {
@@ -1567,8 +1591,8 @@
 
     // 5. 서버 캐시 (GitHub Actions, 매일 06:10·16:00 KST 자동 수집)
     const serverData = await getServerPrices();
-    const serverP = serverData?.[type === 'kr' ? 'pension' : 'us']?.[symbol];
-    if (serverP > 0) {
+    const serverP = validPrice(serverData?.[type === 'kr' ? 'pension' : 'us']?.[symbol]);
+    if (serverP) {
       quoteSrc[qk] = { src: 'cache', asOf: Date.parse(serverData.updated) || 0 };
       return serverP;
     }
@@ -1576,22 +1600,95 @@
     return null;
   }
 
-  // 알람 Gist의 dashboard_prices.json (서버 자동수집분) — 세션당 1회만 조회, 동시 호출은 같은 요청을 공유
+  // 알람 Gist의 dashboard_prices.json (서버 자동수집분)
+  // - 토큰이 있으면 인증 호출(익명 한도 60회/시간 회피)
+  // - 성공 결과만 10분간 캐시, 실패하면 캐시를 비워 다음 호출에서 재시도
+  // - 동시 호출은 같은 요청을 공유
+  const validPrice = v => { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : null; };
+  // 수집 스크립트가 NaN/Infinity를 그대로 써서 JSON.parse가 통째로 실패하던 문제 → null로 바꿔 파싱
+  function parseServerPriceFile(content) {
+    return JSON.parse(String(content).replace(/:\s*(-?Infinity|NaN)\b/g, ': null'));
+  }
+  const SERVER_PRICE_TTL = 10 * 60 * 1000;
   let serverPricePromise = null;
+  let serverPriceAt = 0;
+  function primeServerPrices(gistJson) {
+    const file = gistJson?.files?.['dashboard_prices.json'];
+    if (!file || file.truncated || !file.content) return;
+    try {
+      const data = parseServerPriceFile(file.content);
+      serverPricePromise = Promise.resolve(data);
+      serverPriceAt = Date.now();
+    } catch (_) {}
+  }
   function getServerPrices() {
+    if (serverPricePromise && Date.now() - serverPriceAt > SERVER_PRICE_TTL) serverPricePromise = null;
     if (!serverPricePromise) {
-      serverPricePromise = (async () => {
-        try {
-          const gistId = localStorage.getItem('gist_id') || '';
-          if (!gistId) return {};
-          const res  = await fetchT(`https://api.github.com/gists/${gistId}`, { cache: 'no-store' });
-          const json = await res.json();
-          const file = json?.files?.['dashboard_prices.json'];
-          return file ? JSON.parse(file.content) : {};
-        } catch (_) { return {}; }
+      const { id: gistId, token } = getGistConfig();
+      if (!gistId) return Promise.resolve({});
+      serverPriceAt = Date.now();
+      const p = (async () => {
+        const headers = { Accept: 'application/vnd.github.v3+json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+        const res = await fetchT(`https://api.github.com/gists/${gistId}`, { cache: 'no-store', headers }, 10000);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const json = await res.json();
+        const file = json?.files?.['dashboard_prices.json'];
+        if (!file || !file.content) throw new Error('dashboard_prices.json 없음');
+        return parseServerPriceFile(file.content);
       })();
+      serverPricePromise = p;
+      p.catch(() => { if (serverPricePromise === p) serverPricePromise = null; });
     }
-    return serverPricePromise;
+    return serverPricePromise.catch(() => ({}));
+  }
+
+  // 서버 가격을 기기 가격에 반영 — 기기 값이 서버 기준시각보다 최근에 직접 조회/수동입력된 것이면 유지
+  async function syncServerPrices() {
+    const data = await getServerPrices();
+    const asOf = Date.parse(data?.updated) || 0;
+    if (!asOf) return;
+    const times = getPriceTimes();
+    const newerOnDevice = key => {
+      const r = times[key];
+      return r && !r.cache && (r.ok || 0) > asOf;
+    };
+    const mark = key => { times[key] = { ok: asOf, fail: 0, manual: 0, cache: asOf }; };
+    let changed = false;
+
+    const prices = getPensionPrices();
+    let pensionChanged = false;
+    Object.entries(data.pension || {}).forEach(([t, v]) => {
+      const p = validPrice(v);
+      const key = 'p:' + t;
+      if (!p || newerOnDevice(key)) return;
+      if ((times[key]?.cache || 0) > asOf) return;   // 이미 더 최신 서버값 반영됨
+      prices[t] = p; mark(key); pensionChanged = true;
+    });
+    if (pensionChanged) { localStorage.setItem('pension_prices', JSON.stringify(prices)); changed = true; }
+
+    const US = [['TQQQ', 'tcc_tqqq_price', 'tqqq'], ['SOXL', 'sc_soxl_price', 'soxl']];
+    const usDone = [];
+    US.forEach(([sym, lsKey, tKey]) => {
+      const p = validPrice(data.us?.[sym]);
+      if (!p || newerOnDevice(tKey)) return;
+      if ((times[tKey]?.cache || 0) > asOf) return;
+      localStorage.setItem(lsKey, p); mark(tKey); usDone.push([tKey, p]); changed = true;
+    });
+
+    if (!changed) return;
+    try { localStorage.setItem('price_times', JSON.stringify(times)); } catch (_) {}
+    usDone.forEach(([tKey, p]) => {
+      const el = document.getElementById(tKey + '-price');
+      if (el) el.textContent = '$' + p.toFixed(2);
+      paintPriceTime(tKey, tKey + '-price-time');
+    });
+    renderTccTab();
+    renderScTab();
+    renderPensionTab();
+    renderAssetsTab();
+    if (vrGistData)    renderVrCard(vrGistData);
+    if (mumaeGistData) renderMumaeCard(mumaeGistData);
   }
 
   // ══════════════════════════════════
@@ -2014,17 +2111,46 @@
       const cacheN = recs.filter(r => !r.fail && r.cache).length;
       const okN    = recs.filter(r => !r.fail && r.ok).length;
       const lastOk = Math.max(0, ...recs.map(r => r.ok || 0));
+      const cacheAsOf = Math.max(0, ...recs.filter(r => r.cache > 0).map(r => r.cache));
       let text  = '가격 갱신 기록 없음 — 🔄 전체 새로고침으로 조회하세요';
       let level = 'none';
       if (lastOk > 0 || failN > 0) {
-        text = '가격 ' + (lastOk > 0 ? fmtPriceTime(lastOk) + ' 갱신' : '성공 기록 없음') + ' · ' + okN + '/' + recs.length + '종목 정상';
-        if (cacheN) text += ' · 서버캐시 ' + cacheN;
+        if (cacheN === recs.length && cacheAsOf > 0) {
+          text = '가격 서버캐시 ' + fmtPriceTime(cacheAsOf) + ' 기준 · ' + okN + '/' + recs.length + '종목';
+        } else {
+          text = '가격 ' + (lastOk > 0 ? fmtPriceTime(lastOk) + ' 갱신' : '성공 기록 없음') + ' · ' + okN + '/' + recs.length + '종목 정상';
+          if (cacheN) text += ' · 서버캐시 ' + cacheN;
+        }
         if (failN)  text += ' · ⚠ 실패 ' + failN;
-        level = failN ? 'bad' : cacheN ? 'warn' : 'ok';
+        level = failN ? 'bad' : 'ok';
       }
       summaryEl.textContent = text;
       Object.values(PRICE_LEVEL_CLASS).forEach(c => summaryEl.classList.remove(c));
       summaryEl.classList.add(PRICE_LEVEL_CLASS[level]);
+    }
+
+    // 오래된 가격 경고: 보유 종목 중 가격 기준이 4일 이상 지났거나 가격이 없으면 합산·수익률을 흐리게
+    {
+      const times = getPriceTimes();
+      const held  = holdings.filter(h => h.ticker && h.shares > 0);
+      const staleRecs = held.map(h => ({ h, r: times['p:' + h.ticker] }))
+        .filter(({ h, r }) => !(prices[h.ticker] > 0) || !priceAsOf(r) || isPriceStale(r));
+      const warnEl = document.getElementById('pension-stale-warn');
+      const isStale = staleRecs.length > 0 && totalEval > 0;
+      if (warnEl) {
+        if (isStale) {
+          const oldest = Math.min(...staleRecs.map(({ r }) => priceAsOf(r) || Infinity));
+          const when = Number.isFinite(oldest)
+            ? new Date(oldest).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }).replace(/\.\s?/g, '.').replace(/\.$/, '')
+            : '기록 없음';
+          warnEl.textContent = '⚠ 가격 오래됨(' + when + ') · ' + staleRecs.length + '종목 — 합산평가·수익률 부정확';
+        }
+        warnEl.classList.toggle('hidden', !isStale);
+      }
+      ['pension-total-eval', 'pension-grand-total', 'pension-pnl'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('opacity-40', isStale);
+      });
     }
 
     // 종목별 리스트
@@ -2686,6 +2812,7 @@
     const tasks = [fetchVrGist(), fetchMumaeGist()];
     if (id && token) tasks.push(fetchGistData(), fetchInvestData());
     await Promise.all(tasks);
+    try { await syncServerPrices(); } catch (_) {}
   }
 
   let _rebalanceTotal = 0;
@@ -3197,6 +3324,7 @@
         return;
       }
       const gist = await res.json();
+      primeServerPrices(gist);
       const content = gist.files?.['invest_data.json']?.content;
       // 첫 사용 시엔 파일이 아직 없음 — 오류 아님(첫 저장 때 생성됨)
       if (!content) { syncErr.pull = null; renderSyncStatus(); return; }
